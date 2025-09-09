@@ -1,0 +1,191 @@
+name: Usability Issue
+description: Report user experience problems found during UAT testing
+title: "[UX] "
+labels: ["usability", "ux", "uat", "needs-triage"]
+assignees:
+  - 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a usability issue! This helps us create better user experiences.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Brief description of the usability problem
+      placeholder: ex. Users confused by checkout flow, unclear button labels
+    validations:
+      required: true
+
+  - type: input
+    id: user_journey
+    attributes:
+      label: User Journey/Flow Affected
+      description: Which user workflow or process is impacted?
+      placeholder: ex. New user onboarding, Checkout process, Account settings
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user_type
+    attributes:
+      label: Affected User Type
+      description: Which users experience this usability issue?
+      options:
+        - New/First-time users
+        - Experienced/Return users
+        - Admin users
+        - Manager users
+        - Mobile users
+        - Desktop users
+        - All users
+        - Specific user segment
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: usability_heuristic
+    attributes:
+      label: Nielsen Usability Heuristic Violated
+      description: Which usability principle is violated?
+      options:
+        - "Not applicable/Multiple heuristics"
+        - "1. Visibility of system status"
+        - "2. Match between system and real world"
+        - "3. User control and freedom"
+        - "4. Consistency and standards"
+        - "5. Error prevention"
+        - "6. Recognition rather than recall"
+        - "7. Flexibility and efficiency of use"
+        - "8. Aesthetic and minimalist design"
+        - "9. Help users recognize, diagnose, recover from errors"
+        - "10. Help and documentation"
+      default: 0
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Usability Severity
+      description: How severely does this impact user experience?
+      options:
+        - Critical - Users abandon the task/application
+        - High - Users experience significant frustration or confusion
+        - Medium - Users hesitate but can complete the task
+        - Low - Minor friction, enhancement opportunity
+      default: 1
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment & Device Context
+      description: Browser, device, screen size where the issue occurs
+      placeholder: ex. Safari on iPhone 14, Chrome on laptop 1920x1080, tablet portrait mode
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce_steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the usability issue
+      placeholder: |
+        1. Navigate to checkout page as a new user
+        2. Attempt to complete purchase form
+        3. Observe confusion when encountering "Billing Address" section
+        4. Notice users don't understand if it's required or optional
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_experience
+    attributes:
+      label: Expected User Experience
+      description: What should the ideal user experience be?
+      placeholder: Users should easily understand what information is required and why, with clear guidance through the process
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_experience
+    attributes:
+      label: Actual User Experience
+      description: What users actually experience that creates friction?
+      placeholder: Users pause, look confused, skip required fields, or abandon the form due to unclear requirements
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_confusion
+    attributes:
+      label: Specific User Confusion Points
+      description: What specific aspects cause user confusion or frustration?
+      placeholder: |
+        - Unclear button labels ("Submit" vs "Continue to Payment")
+        - Required fields not clearly marked
+        - No progress indication in multi-step process
+        - Inconsistent navigation patterns
+
+  - type: textarea
+    id: suggested_improvement
+    attributes:
+      label: Suggested UX Improvement
+      description: Recommended user experience improvements
+      placeholder: |
+        - Add clear field labels and help text
+        - Implement progress indicators for multi-step flows
+        - Use consistent button language throughout
+        - Provide inline validation and helpful error messages
+
+  - type: textarea
+    id: business_impact
+    attributes:
+      label: Business Impact
+      description: How does this usability issue affect business goals?
+      placeholder: |
+        - Increased cart abandonment rate
+        - Higher customer support volume
+        - Reduced user satisfaction scores
+        - Potential impact on conversion rates
+
+  - type: checkboxes
+    id: user_research_methods
+    attributes:
+      label: User Research Methods Used
+      description: How was this usability issue discovered? (Select all that apply)
+      options:
+        - label: Direct user observation during testing
+        - label: User feedback/complaints
+        - label: Task completion rate analysis
+        - label: Time-on-task measurement
+        - label: Error rate analysis
+        - label: User satisfaction surveys
+        - label: A/B testing results
+        - label: Analytics data (heatmaps, session recordings)
+
+  - type: textarea
+    id: supporting_data
+    attributes:
+      label: Supporting Data & Evidence
+      description: User quotes, metrics, screenshots, or other evidence
+      placeholder: |
+        - "I don't know if I need to fill this out" - User during testing
+        - 35% of users clicked "Back" from this screen
+        - Screenshot of confusing interface element
+        - Session recording showing user hesitation
+
+  - type: checkboxes
+    id: usability_checklist
+    attributes:
+      label: Usability Testing Checklist
+      description: Confirm testing completeness
+      options:
+        - label: Tested with representative users
+        - label: Observed actual user behavior (not just reported)
+        - label: Tested on relevant devices/screen sizes
+        - label: Considered accessibility implications
+        - label: Analyzed impact on conversion/completion rates

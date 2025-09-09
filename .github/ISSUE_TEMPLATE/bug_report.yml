@@ -1,0 +1,112 @@
+name: Bug Report
+description: Report a bug found during UAT testing
+title: "[BUG] "
+labels: ["bug", "uat", "needs-triage"]
+assignees:
+  - 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report from UAT testing!
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Brief description of the bug
+      placeholder: ex. Login button not working on mobile Safari
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Business Impact
+      description: What is the business impact of this bug?
+      options:
+        - Critical - Blocks core user workflows
+        - High - Affects major functionality
+        - Medium - Minor impact with workarounds
+        - Low - Cosmetic or edge case issue
+      default: 1
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, Device details
+      placeholder: ex. Chrome 118, macOS 13.5, iPhone 14 Pro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user_role
+    attributes:
+      label: User Role
+      description: Which user role experienced this issue?
+      options:
+        - Admin
+        - Manager
+        - Standard User
+        - Guest/Anonymous
+        - API Consumer
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce_steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the issue
+      placeholder: |
+        1. Go to login page
+        2. Enter valid credentials
+        3. Click login button
+        4. Observe error message
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_result
+    attributes:
+      label: Expected Result
+      description: What should have happened?
+      placeholder: User should be logged in and redirected to dashboard
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_result
+    attributes:
+      label: Actual Result
+      description: What actually happened?
+      placeholder: Error message displayed and user remains on login page
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Screenshots, videos, logs, or other relevant information
+      placeholder: |
+        - Console errors
+        - Network request failures
+        - Related user stories
+        - Workarounds attempted
+
+  - type: checkboxes
+    id: testing_checklist
+    attributes:
+      label: UAT Testing Checklist
+      description: Confirm testing completeness
+      options:
+        - label: Issue reproduced in multiple browsers (if applicable)
+        - label: Issue reproduced with different user accounts (if applicable)
+        - label: Console errors documented
+        - label: Network requests analyzed
+        - label: Related functionality tested

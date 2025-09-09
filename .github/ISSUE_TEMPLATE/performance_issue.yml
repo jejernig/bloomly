@@ -1,0 +1,169 @@
+name: Performance Issue
+description: Report performance problems found during UAT testing
+title: "[PERF] "
+labels: ["performance", "uat", "needs-triage"]
+assignees:
+  - 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a performance issue! This helps us maintain optimal user experience.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Brief description of the performance problem
+      placeholder: ex. Dashboard loading takes over 8 seconds on mobile
+    validations:
+      required: true
+
+  - type: dropdown
+    id: metric_affected
+    attributes:
+      label: Performance Metric Affected
+      description: Which performance aspect is impacted?
+      options:
+        - Page Load Time
+        - API Response Time
+        - Database Query Performance
+        - Core Web Vitals (LCP/FID/CLS)
+        - Memory Usage
+        - Network Requests
+        - JavaScript Execution
+        - CSS Rendering
+        - Image Loading
+        - Third-party Integration
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: measured_value
+    attributes:
+      label: Measured Value
+      description: What was actually measured?
+      placeholder: ex. 8.2 seconds, 95th percentile response time 1.8s
+    validations:
+      required: true
+
+  - type: input
+    id: target_value
+    attributes:
+      label: Target/Expected Value
+      description: What should the metric be?
+      placeholder: ex. < 3 seconds, 95th percentile < 500ms
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user_impact
+    attributes:
+      label: User Impact Severity
+      description: How severely does this affect user experience?
+      options:
+        - Critical - Users abandon the application
+        - High - Users experience significant frustration
+        - Medium - Noticeable delay but users continue
+        - Low - Minor impact, mostly measurable not felt
+      default: 1
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment & Test Conditions
+      description: Browser, device, network conditions
+      placeholder: ex. Chrome 118, iPhone 14, Slow 3G network simulation
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce_steps
+    attributes:
+      label: Steps to Reproduce
+      description: How to reproduce the performance issue
+      placeholder: |
+        1. Clear browser cache
+        2. Navigate to dashboard page
+        3. Record page load time from navigation start to fully loaded
+        4. Measure Core Web Vitals using Lighthouse
+    validations:
+      required: true
+
+  - type: textarea
+    id: performance_data
+    attributes:
+      label: Performance Data & Metrics
+      description: Detailed performance measurements and evidence
+      placeholder: |
+        - Lighthouse Performance Score: 45/100
+        - LCP: 4.2s (target: <2.5s)
+        - FID: 180ms (target: <100ms)
+        - CLS: 0.15 (target: <0.1)
+        - Time to First Byte: 1.2s
+        - Network requests: 47 (15 blocking)
+    validations:
+      required: true
+
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Root Cause Analysis
+      description: Investigation findings about what's causing the performance issue
+      placeholder: |
+        - Large unoptimized images (2MB+ hero image)
+        - Synchronous JavaScript blocking rendering
+        - Multiple redundant API calls
+        - Missing resource compression
+
+  - type: textarea
+    id: suggested_optimization
+    attributes:
+      label: Suggested Performance Optimization
+      description: Recommended solutions to improve performance
+      placeholder: |
+        - Implement image optimization and WebP format
+        - Add lazy loading for below-fold content
+        - Consolidate API calls or implement caching
+        - Enable gzip compression for text resources
+
+  - type: checkboxes
+    id: testing_tools
+    attributes:
+      label: Performance Testing Tools Used
+      description: Which tools were used to measure performance? (Select all that apply)
+      options:
+        - label: Google Lighthouse
+        - label: WebPageTest
+        - label: Chrome DevTools Performance
+        - label: Core Web Vitals measurement
+        - label: Network throttling simulation
+        - label: Real device testing
+        - label: APM/monitoring tools
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Screenshots, videos, performance traces, or other data
+      placeholder: |
+        - Performance waterfall screenshots
+        - Lighthouse report URLs
+        - Network tab analysis
+        - Memory profiling data
+        - Business impact (bounce rate, conversion impact)
+
+  - type: checkboxes
+    id: performance_checklist
+    attributes:
+      label: Performance Testing Checklist
+      description: Confirm testing completeness
+      options:
+        - label: Tested on multiple devices (desktop, tablet, mobile)
+        - label: Tested with network throttling (3G, 4G)
+        - label: Measured Core Web Vitals
+        - label: Analyzed network waterfall
+        - label: Compared against performance budgets/targets

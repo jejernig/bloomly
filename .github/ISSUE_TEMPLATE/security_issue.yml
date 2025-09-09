@@ -1,0 +1,185 @@
+name: Security Issue
+description: Report security concerns found during UAT testing
+title: "[SECURITY] "
+labels: ["security", "uat", "needs-triage"]
+assignees:
+  - 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **Security Issue Report** ⚠️
+        
+        Please ensure this issue is marked as appropriate visibility level. For critical security vulnerabilities, consider using private security advisories.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Brief description of the security concern (avoid sensitive details in title)
+      placeholder: ex. User authentication bypass in profile section
+    validations:
+      required: true
+
+  - type: dropdown
+    id: security_category
+    attributes:
+      label: Security Category
+      description: What type of security issue is this?
+      options:
+        - Authentication - Login, logout, session management
+        - Authorization - Access control, permissions, privilege escalation
+        - Data Protection - Encryption, data exposure, PII handling
+        - Input Validation - XSS, SQL injection, command injection
+        - Session Management - Token handling, session fixation
+        - CSRF Protection - Cross-site request forgery
+        - Configuration - Security headers, SSL/TLS setup
+        - Third-party Integration - External service security
+        - Compliance - GDPR, HIPAA, PCI-DSS violations
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: owasp_category
+    attributes:
+      label: OWASP Top 10 Category (if applicable)
+      description: Which OWASP Top 10 category does this fall under?
+      options:
+        - "Not OWASP Top 10"
+        - "A01 - Broken Access Control"
+        - "A02 - Cryptographic Failures"
+        - "A03 - Injection"
+        - "A04 - Insecure Design"
+        - "A05 - Security Misconfiguration"
+        - "A06 - Vulnerable and Outdated Components"
+        - "A07 - Identification and Authentication Failures"
+        - "A08 - Software and Data Integrity Failures"
+        - "A09 - Security Logging and Monitoring Failures"
+        - "A10 - Server-Side Request Forgery (SSRF)"
+      default: 0
+
+  - type: dropdown
+    id: risk_level
+    attributes:
+      label: Risk Level
+      description: What is the risk level of this security issue?
+      options:
+        - Critical - Immediate data breach risk, system compromise
+        - High - Significant security risk, potential data exposure
+        - Medium - Moderate risk with limited impact
+        - Low - Security improvement, defense in depth
+      default: 1
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment & Context
+      description: Browser, OS, user role, system context
+      placeholder: ex. Chrome 118, Windows 11, Standard User role, Production-like staging
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce_steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the security issue (be careful with sensitive information)
+      placeholder: |
+        1. Log in as standard user
+        2. Navigate to user profile page
+        3. Modify URL parameter to access another user's data
+        4. Observe unauthorized data access
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Security Behavior
+      description: What should happen from a security perspective?
+      placeholder: System should deny access and return appropriate error message or redirect to authorized page
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual Security Behavior
+      description: What actually happens that creates the security risk?
+      placeholder: System allows access to unauthorized user data without proper validation
+    validations:
+      required: true
+
+  - type: textarea
+    id: potential_impact
+    attributes:
+      label: Potential Impact
+      description: What could an attacker achieve with this vulnerability?
+      placeholder: |
+        - Unauthorized access to user personal data
+        - Potential data modification or deletion
+        - Privacy violations affecting user trust
+        - Regulatory compliance issues (GDPR, HIPAA)
+
+  - type: textarea
+    id: suggested_remediation
+    attributes:
+      label: Suggested Remediation
+      description: Recommended security controls or fixes
+      placeholder: |
+        - Implement proper authorization checks for user data access
+        - Add server-side validation for all user inputs
+        - Implement principle of least privilege
+        - Add security logging for access attempts
+
+  - type: checkboxes
+    id: compliance_impact
+    attributes:
+      label: Compliance Impact
+      description: Which compliance frameworks might be affected? (Select all that apply)
+      options:
+        - label: GDPR (General Data Protection Regulation)
+        - label: HIPAA (Health Insurance Portability and Accountability Act)
+        - label: PCI-DSS (Payment Card Industry Data Security Standard)
+        - label: SOX (Sarbanes-Oxley Act)
+        - label: SOC 2 (Service Organization Control 2)
+        - label: ISO 27001
+        - label: NIST Cybersecurity Framework
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context & Evidence
+      description: Screenshots (redacted if sensitive), logs, network traces
+      placeholder: |
+        - Screenshots with sensitive data redacted
+        - Browser developer tools network tab
+        - Server logs (if available)
+        - Related security controls that should prevent this
+
+  - type: checkboxes
+    id: security_checklist
+    attributes:
+      label: Security Testing Checklist
+      description: Confirm security testing completeness
+      options:
+        - label: Tested with different user roles/privileges
+        - label: Verified input validation and sanitization
+        - label: Checked for proper authentication/authorization
+        - label: Examined network requests for sensitive data
+        - label: Considered business logic security implications
+
+  - type: checkboxes
+    id: disclosure_agreement
+    attributes:
+      label: Responsible Disclosure
+      description: Security disclosure acknowledgment
+      options:
+        - label: I understand this may be a security vulnerability that should be handled carefully
+        - label: I agree to follow responsible disclosure practices
+        - label: I will not publicly disclose details until the issue is resolved
+      validations:
+        required: true
