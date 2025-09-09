@@ -14,10 +14,14 @@ interface CanvasEditorProps {
 export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const liveRegionRef = useRef<HTMLDivElement>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [focusedObjectIndex, setFocusedObjectIndex] = useState<number>(-1)
+  const [announcement, setAnnouncement] = useState<string>('')
   
   const {
     canvas,
+    canvasState,
     setCanvas,
     zoom,
     setZoom,
@@ -28,6 +32,8 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
     optimizeForDevice,
     initialize,
     cleanup,
+    setSelectedObject,
+    selectedObjectId,
   } = useCanvasStore()
 
   // Touch handling for mobile
@@ -86,6 +92,78 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
       defaultCursor: 'default',
     })
 
+    // Add accessibility features to canvas
+    fabricCanvas.upperCanvasEl.setAttribute('role', 'img')
+    fabricCanvas.upperCanvasEl.setAttribute('tabindex', '0')
+    
+    // Canvas selection handlers for accessibility  
+    const handleSelectionCreated = (e: any) => {
+      const obj = e.selected?.[0]
+      if (obj) {
+        const type = obj.type || 'object'
+        const left = Math.round(obj.left || 0)
+        const top = Math.round(obj.top || 0)
+        let description = `${type} at position ${left}, ${top}`
+        
+        if (obj.type === 'text' || obj.type === 'textbox') {
+          const textContent = (obj as any).text || (obj.properties as any)?.text || ''
+          description = `text "${textContent}" at position ${left}, ${top}`
+        }
+        
+        setAnnouncement(`Selected ${description}`)
+        const objects = fabricCanvas.getObjects()
+        const index = objects.indexOf(obj)
+        setFocusedObjectIndex(index)
+      }
+    }
+    
+    const handleSelectionUpdated = (e: any) => {
+      const obj = e.selected?.[0]
+      if (obj) {
+        const type = obj.type || 'object'
+        const left = Math.round(obj.left || 0)
+        const top = Math.round(obj.top || 0)
+        let description = `${type} at position ${left}, ${top}`
+        
+        if (obj.type === 'text' || obj.type === 'textbox') {
+          const textContent = (obj as any).text || (obj.properties as any)?.text || ''
+          description = `text "${textContent}" at position ${left}, ${top}`
+        }
+        
+        setAnnouncement(`Selected ${description}`)
+        const objects = fabricCanvas.getObjects()
+        const index = objects.indexOf(obj)
+        setFocusedObjectIndex(index)
+      }
+    }
+    
+    const handleSelectionCleared = () => {
+      setAnnouncement('Selection cleared')
+      setFocusedObjectIndex(-1)
+    }
+    
+    const handleObjectModified = (e: any) => {
+      const obj = e.target
+      if (obj) {
+        const type = obj.type || 'object'
+        const left = Math.round(obj.left || 0)
+        const top = Math.round(obj.top || 0)
+        let description = `${type} at position ${left}, ${top}`
+        
+        if (obj.type === 'text' || obj.type === 'textbox') {
+          const textContent = (obj as any).text || (obj.properties as any)?.text || ''
+          description = `text "${textContent}" at position ${left}, ${top}`
+        }
+        
+        setAnnouncement(`Modified ${description}`)
+      }
+    }
+    
+    fabricCanvas.on('selection:created', handleSelectionCreated)
+    fabricCanvas.on('selection:updated', handleSelectionUpdated)
+    fabricCanvas.on('selection:cleared', handleSelectionCleared)
+    fabricCanvas.on('object:modified', handleObjectModified)
+
     // Mobile-specific optimizations
     if (isMobile) {
       // Disable context menu on long press
@@ -113,10 +191,163 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
 
     return () => {
       resizeObserver.disconnect()
+      fabricCanvas.off('selection:created', handleSelectionCreated)
+      fabricCanvas.off('selection:updated', handleSelectionUpdated)
+      fabricCanvas.off('selection:cleared', handleSelectionCleared)
+      fabricCanvas.off('object:modified', handleObjectModified)
       fabricCanvas.dispose()
       cleanup()
     }
   }, [canvas, setCanvas, optimizeForDevice, initialize, cleanup, isMobile, isInitialized])
+
+  // Accessibility helper functions
+  const getObjectDescription = useCallback((obj: fabric.Object): string => {
+    const objWithId = obj as any
+    const type = obj.type || 'object'
+    const left = Math.round(obj.left || 0)
+    const top = Math.round(obj.top || 0)
+    
+    let description = `${type} at position ${left}, ${top}`
+    
+    if (obj.type === 'text' || obj.type === 'textbox') {
+      const textObj = obj as fabric.Text
+      description = `text "${textObj.text}" at position ${left}, ${top}`
+    } else if (obj.type === 'image') {
+      description = `image at position ${left}, ${top}`
+    } else if (obj.type === 'rect') {
+      description = `rectangle at position ${left}, ${top}`
+    } else if (obj.type === 'circle') {
+      description = `circle at position ${left}, ${top}`
+    }
+    
+    return description
+  }, [])
+  
+  const announceToScreenReader = useCallback((message: string) => {
+    setAnnouncement(message)
+    // Clear after announcement to allow repeat announcements
+    setTimeout(() => setAnnouncement(''), 100)
+  }, [])
+  
+  const updateFocusedObject = useCallback((obj: fabric.Object) => {
+    if (!canvas) {
+      return
+    }
+    const objects = canvas.getObjects()
+    const index = objects.indexOf(obj)
+    setFocusedObjectIndex(index)
+  }, [canvas])
+  
+  const getCanvasDescription = useCallback((): string => {
+    if (!canvasState || !canvasState.objects) {
+      return 'Empty canvas, 800 by 800 pixels'
+    }
+    
+    const objectCount = canvasState.objects.length
+    const descriptions = canvasState.objects.map(obj => {
+      const type = obj.type || 'object'
+      if (obj.type === 'text' && (obj.properties as any)?.text) {
+        return `text "${(obj.properties as any).text}"`
+      }
+      return type
+    })
+    
+    if (objectCount === 0) {
+      return 'Empty canvas, 800 by 800 pixels'
+    } else if (objectCount === 1) {
+      return `Canvas with 1 ${descriptions[0]}, 800 by 800 pixels`
+    } else {
+      return `Canvas with ${objectCount} objects: ${descriptions.join(', ')}, 800 by 800 pixels`
+    }
+  }, [canvasState])
+  
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!canvas) {
+      return
+    }
+    
+    const objects = canvas.getObjects()
+    if (objects.length === 0) {
+      return
+    }
+    
+    switch (e.key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        e.preventDefault()
+        if (focusedObjectIndex < objects.length - 1) {
+          const nextIndex = focusedObjectIndex + 1
+          const nextObject = objects[nextIndex]
+          canvas.setActiveObject(nextObject)
+          setFocusedObjectIndex(nextIndex)
+          const description = getObjectDescription(nextObject)
+          announceToScreenReader(`Focused on ${description}`)
+        } else {
+          // Wrap to first object
+          const firstObject = objects[0]
+          canvas.setActiveObject(firstObject)
+          setFocusedObjectIndex(0)
+          const description = getObjectDescription(firstObject)
+          announceToScreenReader(`Focused on ${description}`)
+        }
+        canvas.renderAll()
+        break
+        
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        e.preventDefault()
+        if (focusedObjectIndex > 0) {
+          const prevIndex = focusedObjectIndex - 1
+          const prevObject = objects[prevIndex]
+          canvas.setActiveObject(prevObject)
+          setFocusedObjectIndex(prevIndex)
+          const description = getObjectDescription(prevObject)
+          announceToScreenReader(`Focused on ${description}`)
+        } else {
+          // Wrap to last object
+          const lastIndex = objects.length - 1
+          const lastObject = objects[lastIndex]
+          canvas.setActiveObject(lastObject)
+          setFocusedObjectIndex(lastIndex)
+          const description = getObjectDescription(lastObject)
+          announceToScreenReader(`Focused on ${description}`)
+        }
+        canvas.renderAll()
+        break
+        
+      case 'Enter':
+      case ' ':
+        e.preventDefault()
+        if (focusedObjectIndex >= 0 && focusedObjectIndex < objects.length) {
+          const object = objects[focusedObjectIndex]
+          const description = getObjectDescription(object)
+          announceToScreenReader(`Selected ${description}`)
+          setSelectedObject((object as any).id)
+        }
+        break
+        
+      case 'Delete':
+      case 'Backspace':
+        e.preventDefault()
+        if (canvas.getActiveObject()) {
+          const activeObject = canvas.getActiveObject()
+          const description = getObjectDescription(activeObject!)
+          canvas.remove(activeObject!)
+          announceToScreenReader(`Deleted ${description}`)
+          setFocusedObjectIndex(-1)
+        }
+        break
+        
+      case 'Escape':
+        e.preventDefault()
+        canvas.discardActiveObject()
+        canvas.renderAll()
+        setFocusedObjectIndex(-1)
+        announceToScreenReader('Selection cleared')
+        break
+    }
+  }, [canvas, focusedObjectIndex, getObjectDescription, announceToScreenReader, setSelectedObject])
 
   // Touch event handlers for mobile gestures
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -301,14 +532,47 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
       onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
     >
+      {/* Screen reader announcements */}
+      <div
+        ref={liveRegionRef}
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {announcement}
+      </div>
+      
+      {/* Canvas instructions for screen readers */}
+      <div className="sr-only">
+        <h2>Canvas Editor</h2>
+        <p>
+          Use arrow keys to navigate between objects on the canvas.
+          Press Enter or Space to select an object.
+          Press Delete to remove selected object.
+          Press Escape to clear selection.
+        </p>
+      </div>
+      
       <canvas
         ref={canvasRef}
         className="mx-auto my-auto block border border-gray-200 shadow-sm bg-white"
+        aria-label={getCanvasDescription()}
+        aria-describedby="canvas-instructions"
+        onKeyDown={handleKeyDown}
         style={{
           touchAction: 'none',
           userSelect: 'none',
         }}
       />
+      
+      {/* Hidden instructions for screen readers */}
+      <div id="canvas-instructions" className="sr-only">
+        <p>Interactive canvas for creating and editing designs.</p>
+        <p>Navigation: Use arrow keys to move between objects.</p>
+        <p>Selection: Press Enter or Space to select focused object.</p>
+        <p>Actions: Press Delete to remove selected object, Escape to clear selection.</p>
+        <p>Current canvas state: {getCanvasDescription()}</p>
+      </div>
       
       {/* Canvas overlay for mobile gestures */}
       {isMobile && (

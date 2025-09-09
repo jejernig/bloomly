@@ -14,6 +14,13 @@ interface CanvasStore {
   history: CanvasState[]
   historyStep: number
   maxHistorySteps: number
+  isHistoryDisabled: boolean
+  
+  // Debouncing for performance
+  historySaveTimeout: NodeJS.Timeout | null
+  renderTimeout: NodeJS.Timeout | null
+  lastRenderTime: number
+  renderingThrottled: boolean
   
   // UI state
   zoom: number
@@ -49,6 +56,7 @@ interface CanvasStore {
   
   // History operations
   saveToHistory: () => void
+  saveToHistoryDebounced: () => void
   undo: () => void
   redo: () => void
   clearHistory: () => void
@@ -64,6 +72,12 @@ interface CanvasStore {
   handlePinchZoom: (scale: number, center: Point) => void
   handlePanGesture: (delta: Point) => void
   optimizeForDevice: () => void
+  
+  // Performance optimizations
+  optimizeForObjectCount: () => void
+  throttledRender: () => void
+  enableVirtualization: () => void
+  disableVirtualization: () => void
   
   // Template and project operations
   loadTemplate: (templateData: CanvasState) => void
@@ -95,6 +109,11 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   history: [],
   historyStep: -1,
   maxHistorySteps: 20,
+  isHistoryDisabled: false,
+  historySaveTimeout: null,
+  renderTimeout: null,
+  lastRenderTime: 0,
+  renderingThrottled: false,
   
   // UI state
   zoom: 1,
@@ -114,10 +133,10 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       store.canvas.off()
     }
     
-    // Set up canvas event listeners
-    canvas.on('object:added', store.saveToHistory)
-    canvas.on('object:modified', store.saveToHistory)
-    canvas.on('object:removed', store.saveToHistory)
+    // Set up canvas event listeners with debounced history saving
+    canvas.on('object:added', store.saveToHistoryDebounced)
+    canvas.on('object:modified', store.saveToHistoryDebounced)
+    canvas.on('object:removed', store.saveToHistoryDebounced)
     canvas.on('selection:created', (e) => {
       const object = e.selected?.[0]
       if (object) {
@@ -143,11 +162,11 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       const object = canvas.getObjects().find(obj => (obj as any).id === objectId)
       if (object) {
         canvas.setActiveObject(object)
-        canvas.renderAll()
+        get().throttledRender()
       }
     } else if (canvas) {
       canvas.discardActiveObject()
-      canvas.renderAll()
+      get().throttledRender()
     }
     set({ selectedObjectId: objectId })
   },
@@ -187,7 +206,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
           })
           ;(img as any).id = object.id
           canvas.add(img)
-          canvas.renderAll()
+          get().throttledRender()
         }).catch((error) => {
           console.error('Failed to load image:', error)
         })
@@ -231,7 +250,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     })
     
     canvas.add(fabricObject)
-    canvas.renderAll()
+    get().throttledRender()
     
     // Update state
     set(state => ({
@@ -240,6 +259,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         objects: [...state.canvasState.objects, object]
       }
     }))
+    
+    // Reoptimize for new object count
+    get().optimizeForObjectCount()
   },
   
   updateObject: (objectId, updates) => {
@@ -279,7 +301,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       fabricObject.set('visible', updates.visible)
     }
     
-    canvas.renderAll()
+    get().throttledRender()
     
     // Update state
     const objectIndex = canvasState.objects.findIndex(obj => obj.id === objectId)
@@ -305,7 +327,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     const fabricObject = canvas.getObjects().find(obj => (obj as any).id === objectId)
     if (fabricObject) {
       canvas.remove(fabricObject)
-      canvas.renderAll()
+      get().throttledRender()
     }
     
     // Update state
@@ -316,6 +338,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       },
       selectedObjectId: state.selectedObjectId === objectId ? null : state.selectedObjectId
     }))
+    
+    // Reoptimize for new object count
+    get().optimizeForObjectCount()
   },
   
   duplicateObject: (objectId) => {
@@ -361,12 +386,16 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
         break
     }
     
-    canvas.renderAll()
+    get().throttledRender()
   },
   
   // History operations
   saveToHistory: () => {
-    const { canvasState, history, historyStep, maxHistorySteps } = get()
+    const { canvasState, history, historyStep, maxHistorySteps, isHistoryDisabled } = get()
+    
+    if (isHistoryDisabled) {
+      return
+    }
     
     // Remove any future history if we're not at the end
     const newHistory = history.slice(0, historyStep + 1)
@@ -383,6 +412,27 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       history: newHistory,
       historyStep: newHistory.length - 1,
     })
+  },
+  
+  saveToHistoryDebounced: () => {
+    const { historySaveTimeout, isHistoryDisabled } = get()
+    
+    if (isHistoryDisabled) {
+      return
+    }
+    
+    // Clear existing timeout
+    if (historySaveTimeout) {
+      clearTimeout(historySaveTimeout)
+    }
+    
+    // Set new timeout - save history after 500ms of no activity
+    const newTimeout = setTimeout(() => {
+      get().saveToHistory()
+      set({ historySaveTimeout: null })
+    }, 500)
+    
+    set({ historySaveTimeout: newTimeout })
   },
   
   undo: () => {
@@ -425,7 +475,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     const { canvas } = get()
     if (canvas) {
       canvas.setZoom(zoom)
-      canvas.renderAll()
+      get().throttledRender()
     }
     set({ zoom })
   },
@@ -434,7 +484,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     const { canvas } = get()
     if (canvas) {
       canvas.relativePan(new fabric.Point(pan.x, pan.y))
-      canvas.renderAll()
+      get().throttledRender()
     }
     set({ pan })
   },
@@ -444,7 +494,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     if (canvas) {
       canvas.setZoom(1)
       canvas.absolutePan(new fabric.Point(0, 0))
-      canvas.renderAll()
+      get().throttledRender()
     }
     set({ zoom: 1, pan: { x: 0, y: 0 } })
   },
@@ -466,7 +516,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     
     canvas.setZoom(scale)
     canvas.centerObject(canvas as any) // Center the viewport
-    canvas.renderAll()
+    get().throttledRender()
     
     set({ zoom: scale })
   },
@@ -482,7 +532,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     
     const newZoom = Math.max(0.1, Math.min(5, zoom * scale))
     canvas.zoomToPoint(new fabric.Point(center.x, center.y), newZoom)
-    canvas.renderAll()
+    get().throttledRender()
     
     set({ zoom: newZoom })
   },
@@ -494,7 +544,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     }
     
     canvas.relativePan(new fabric.Point(delta.x, delta.y))
-    canvas.renderAll()
+    get().throttledRender()
     
     set(state => ({
       pan: {
@@ -558,7 +608,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       get().addObject(obj)
     })
     
-    canvas.renderAll()
+    get().throttledRender()
     get().saveToHistory()
   },
   
@@ -601,21 +651,168 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   
   initialize: () => {
     get().optimizeForDevice()
+    get().optimizeForObjectCount()
     get().saveToHistory()
   },
   
+  // Performance optimizations for 50+ objects
+  optimizeForObjectCount: () => {
+    const { canvas, canvasState, deviceProfile } = get()
+    if (!canvas) {
+      return
+    }
+    
+    const objectCount = canvasState.objects.length
+    
+    // Apply aggressive optimizations for 50+ objects
+    if (objectCount >= 50) {
+      canvas.renderOnAddRemove = false
+      canvas.skipTargetFind = true
+      canvas.imageSmoothingEnabled = false
+      canvas.allowTouchScrolling = false
+      canvas.selection = false // Disable multi-selection for performance
+      set({ renderingThrottled: true })
+      
+      // Additional optimizations for very large object counts
+      if (objectCount >= 100) {
+        canvas.perPixelTargetFind = false
+        canvas.targetFindTolerance = 10 // Increase hit detection tolerance
+        
+        // Disable animations and transitions
+        if ((canvas as any).fxCenterObjectH) {
+          (canvas as any).fxCenterObjectH = null
+        }
+      }
+    } else if (objectCount >= 20) {
+      // Moderate optimizations for 20-49 objects
+      canvas.renderOnAddRemove = deviceProfile === 'high'
+      canvas.skipTargetFind = deviceProfile === 'low'
+      canvas.imageSmoothingEnabled = deviceProfile === 'high'
+      set({ renderingThrottled: deviceProfile !== 'high' })
+    } else {
+      // Enable full features for < 20 objects
+      canvas.renderOnAddRemove = true
+      canvas.skipTargetFind = false
+      canvas.imageSmoothingEnabled = true
+      canvas.selection = true
+      canvas.allowTouchScrolling = true
+      set({ renderingThrottled: false })
+    }
+  },
+  
+  throttledRender: () => {
+    const { canvas, renderTimeout, renderingThrottled, lastRenderTime } = get()
+    if (!canvas || !renderingThrottled) {
+      canvas?.renderAll()
+      return
+    }
+    
+    const now = Date.now()
+    const timeSinceLastRender = now - lastRenderTime
+    
+    // If enough time has passed, render immediately
+    if (timeSinceLastRender >= 16) { // ~60fps
+      get().throttledRender()
+      set({ lastRenderTime: now })
+      return
+    }
+    
+    // Otherwise, schedule a render
+    if (renderTimeout) {
+      clearTimeout(renderTimeout)
+    }
+    
+    const timeout = setTimeout(() => {
+      get().throttledRender()
+      set({ 
+        lastRenderTime: Date.now(),
+        renderTimeout: null 
+      })
+    }, 16 - timeSinceLastRender)
+    
+    set({ renderTimeout: timeout })
+  },
+  
+  enableVirtualization: () => {
+    const { canvas, canvasState, zoom } = get()
+    if (!canvas) {
+      return
+    }
+    
+    // Simple object culling based on viewport
+    const vpt = canvas.viewportTransform
+    if (!vpt) {
+      return
+    }
+    
+    const canvasWidth = canvas.getWidth() / zoom
+    const canvasHeight = canvas.getHeight() / zoom
+    const viewportLeft = -vpt[4] / zoom
+    const viewportTop = -vpt[5] / zoom
+    
+    canvasState.objects.forEach(obj => {
+      const fabricObj = canvas.getObjects().find(fObj => (fObj as any).id === obj.id)
+      if (!fabricObj) {
+        return
+      }
+      
+      // Hide objects outside viewport (with some margin for performance)
+      const margin = 100
+      const isVisible = 
+        obj.x + obj.width >= viewportLeft - margin &&
+        obj.x <= viewportLeft + canvasWidth + margin &&
+        obj.y + obj.height >= viewportTop - margin &&
+        obj.y <= viewportTop + canvasHeight + margin
+      
+      fabricObj.visible = isVisible
+    })
+    
+    get().throttledRender()
+  },
+  
+  disableVirtualization: () => {
+    const { canvas, canvasState } = get()
+    if (!canvas) {
+      return
+    }
+    
+    // Make all objects visible
+    canvasState.objects.forEach(obj => {
+      const fabricObj = canvas.getObjects().find(fObj => (fObj as any).id === obj.id)
+      if (fabricObj) {
+        fabricObj.visible = obj.visible // Restore original visibility
+      }
+    })
+    
+    get().throttledRender()
+  },
+  
   cleanup: () => {
-    const { canvas } = get()
+    const { canvas, historySaveTimeout, renderTimeout } = get()
+    
+    // Clear timeouts if they exist
+    if (historySaveTimeout) {
+      clearTimeout(historySaveTimeout)
+    }
+    if (renderTimeout) {
+      clearTimeout(renderTimeout)
+    }
+    
     if (canvas) {
       canvas.off()
       canvas.dispose()
     }
+    
     set({
       canvas: null,
       selectedObjectId: null,
       selectedObjectIds: [],
       history: [],
       historyStep: -1,
+      historySaveTimeout: null,
+      renderTimeout: null,
+      lastRenderTime: 0,
+      renderingThrottled: false,
       error: null,
     })
   },
@@ -632,7 +829,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     if (objects.length > 0) {
       const activeSelection = new fabric.ActiveSelection(objects, { canvas })
       canvas.setActiveObject(activeSelection)
-      canvas.renderAll()
+      get().throttledRender()
     }
     
     set({ 
@@ -662,7 +859,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     const { canvas } = get()
     if (canvas) {
       canvas.discardActiveObject()
-      canvas.renderAll()
+      get().throttledRender()
     }
     set({ 
       selectedObjectIds: [], 
