@@ -153,9 +153,13 @@ Thumbs.db
 test-results/
 playwright-report/
 playwright/.cache/
+.playwright-mcp/
 
 # Build info
 .next/trace
 
 # Serena cache
 .serena/cache/
+
+# Sensitive files
+CLAUDE.md
