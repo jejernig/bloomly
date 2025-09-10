@@ -5,16 +5,9 @@ import { CanvasEditor } from '../canvas/CanvasEditor'
 import { EditorSidebar } from './EditorSidebar'
 import { LayerPanel } from './LayerPanel'
 import { PropertyPanel } from './PropertyPanel'
-
 import { useCanvasStore } from '@/stores/useCanvasStore'
 import { Button } from '@/components/ui/Button'
 import { projectsAPI, showErrorToast, showSuccessToast } from '@/lib/api'
-
-interface MobileEditorLayoutProps {
-  children: React.ReactNode
-  sidebarOpen: boolean
-  setSidebarOpen: (open: boolean) => void
-}
 import {
   Menu,
   X,

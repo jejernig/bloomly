@@ -33,7 +33,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { profile, signOut } = useAuthStore()
+  const { user, signOut } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -80,18 +80,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-700'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <item.icon
-                    className={`mr-3 h-5 w-5 ${
-                      isActive ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-600'
-                    }`}
-                  />
+                  <item.icon className={`mr-3 h-5 w-5 ${
+                    isActive ? 'text-primary-700' : 'text-gray-400'
+                  }`} />
                   {item.name}
                 </Link>
               )
@@ -102,14 +100,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center mb-4">
               <div className="h-10 w-10 bg-gradient-to-r from-primary-400 to-secondary-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                {profile?.fullName?.split(' ').map(n => n[0]).join('') || <User className="h-5 w-5" />}
+                {user?.fullName?.split(' ').map(n => n[0]).join('') || <User className="h-5 w-5" />}
               </div>
               <div className="ml-3 flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-700 truncate">
-                  {profile?.fullName || 'User'}
+                  {user?.fullName || 'User'}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {profile?.subscriptionTier || 'free'}
+                  {user?.subscriptionTier || 'free'}
                 </p>
               </div>
             </div>
@@ -151,7 +149,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6">
+        <main className="flex-1">
           {children}
         </main>
       </div>

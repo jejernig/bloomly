@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { BarChart3, TrendingUp, Users, Zap, AlertCircle, RefreshCcw } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { InlineErrorBoundary } from '@/components/error/ErrorBoundary'
@@ -58,7 +58,7 @@ export function DashboardOverview() {
     return 'neutral'
   }
 
-  const transformDashboardData = (data: DashboardData): DashboardStat[] => {
+  const transformDashboardData = useCallback((data: DashboardData): DashboardStat[] => {
     return [
       {
         name: 'Posts Created',
@@ -89,9 +89,9 @@ export function DashboardOverview() {
         icon: Zap,
       },
     ]
-  }
+  }, [])
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -119,11 +119,11 @@ export function DashboardOverview() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [transformDashboardData])
 
   useEffect(() => {
     loadDashboardData()
-  }, [])
+  }, [loadDashboardData])
 
   if (isLoading) {
     return (

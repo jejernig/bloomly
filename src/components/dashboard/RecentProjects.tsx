@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { ErrorBoundary, InlineErrorBoundary } from '@/components/error/ErrorBoundary'
@@ -21,7 +21,7 @@ export function RecentProjects({ className, limit = 3 }: RecentProjectsProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -49,17 +49,21 @@ export function RecentProjects({ className, limit = 3 }: RecentProjectsProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [limit])
 
   useEffect(() => {
     loadProjects()
-  }, [limit])
+  }, [loadProjects])
 
   const formatRelativeTime = (dateString: string | undefined) => {
-    if (!dateString) return 'Unknown time'
+    if (!dateString) {
+      return 'Unknown time'
+    }
     
     const date = new Date(dateString)
-    if (isNaN(date.getTime())) return 'Invalid date'
+    if (isNaN(date.getTime())) {
+      return 'Invalid date'
+    }
     
     const now = new Date()
     const diffInMs = now.getTime() - date.getTime()

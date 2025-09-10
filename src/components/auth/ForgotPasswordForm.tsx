@@ -56,7 +56,7 @@ export function ForgotPasswordForm() {
           </div>
           <h2 className="mt-4 text-xl font-semibold text-gray-900">Check your email</h2>
           <p className="mt-2 text-sm text-gray-600">
-            We've sent a password reset link to{' '}
+            We&apos;ve sent a password reset link to{' '}
             <span className="font-medium text-gray-900">{submittedEmail}</span>
           </p>
         </div>
@@ -68,7 +68,7 @@ export function ForgotPasswordForm() {
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-blue-800">
-                Didn't receive the email?
+                Didn&apos;t receive the email?
               </h3>
               <div className="mt-2 text-sm text-blue-700">
                 <ul role="list" className="list-disc space-y-1 pl-5">
@@ -114,7 +114,7 @@ export function ForgotPasswordForm() {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">Forgot your password?</h2>
         <p className="mt-2 text-sm text-gray-600">
-          Enter your email address and we'll send you a link to reset your password.
+          Enter your email address and we&apos;ll send you a link to reset your password.
         </p>
       </div>
 

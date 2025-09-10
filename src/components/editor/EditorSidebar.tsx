@@ -397,7 +397,7 @@ export function EditorSidebar({ isOpen, onClose, isMobile = false }: EditorSideb
                     <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-md cursor-grab hover:scale-105 transition-transform">
                       <img
                         src={`https://picsum.photos/150/150?random=${i + 10}`}
-                        alt={`Stock photo ${i + 1}`}
+                        alt={`Stock photo option ${i + 1}`}
                         className="w-full h-full object-cover rounded-md"
                         loading="lazy"
                       />

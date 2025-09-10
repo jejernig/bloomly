@@ -48,10 +48,10 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Agreement to Terms</h2>
               <p className="text-gray-700 mb-4">
-                By accessing or using Bloomly.io ("Service," "Platform," "we," "us," or "our"), you ("User," "you," or "your") agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use our Service.
+                By accessing or using Bloomly.io (&ldquo;Service,&rdquo; &ldquo;Platform,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;), you (&ldquo;User,&rdquo; &ldquo;you,&rdquo; or &ldquo;your&rdquo;) agree to be bound by these Terms of Service (&ldquo;Terms&rdquo;). If you do not agree to these Terms, you may not access or use our Service.
               </p>
               <p className="text-gray-700">
-                Bloomly.io provides AI-powered Instagram content creation tools and services specifically designed for fashion boutiques and retailers ("Services"). These Terms govern your use of our website, mobile application, AI design tools, content creation features, and all related services.
+                Bloomly.io provides AI-powered Instagram content creation tools and services specifically designed for fashion boutiques and retailers (&ldquo;Services&rdquo;). These Terms govern your use of our website, mobile application, AI design tools, content creation features, and all related services.
               </p>
             </section>
 
@@ -151,7 +151,7 @@ export default function TermsOfServicePage() {
               <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-semibold text-red-900 mb-3">Limitation of Liability</h3>
                 <p className="text-red-800">
-                  THE SERVICE IS PROVIDED "AS-IS" AND "AS-AVAILABLE" WITHOUT WARRANTIES. TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES.
+                  THE SERVICE IS PROVIDED &ldquo;AS-IS&rdquo; AND &ldquo;AS-AVAILABLE&rdquo; WITHOUT WARRANTIES. TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES.
                 </p>
               </div>
 

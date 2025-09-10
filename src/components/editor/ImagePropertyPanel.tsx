@@ -112,7 +112,7 @@ export function ImagePropertyPanel({ object, properties, onUpdate }: ImageProper
             {properties.src ? (
               <img
                 src={properties.src}
-                alt="Preview"
+                alt="Image preview for canvas object"
                 className="w-full h-full object-cover"
                 style={{
                   borderRadius: `${properties.borderRadius}px`,

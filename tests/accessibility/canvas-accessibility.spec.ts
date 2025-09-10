@@ -323,7 +323,7 @@ test.describe('Canvas Accessibility Tests', () => {
   });
 
   test.describe('Mobile Accessibility', () => {
-    test.use({ ...test, viewport: { width: 390, height: 844 } });
+    test.use({ viewport: { width: 390, height: 844 } });
 
     test('should support touch accessibility features @a11y @mobile', async ({ page }) => {
       // Check for touch-friendly sizes

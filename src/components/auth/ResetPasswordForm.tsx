@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -27,10 +27,12 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 
 export function ResetPasswordForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { resetPassword, isLoading } = useAuthStore()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
 
   const {
     register,
@@ -43,9 +45,26 @@ export function ResetPasswordForm() {
 
   const password = watch('password')
 
+  // Extract token from URL parameters
+  useEffect(() => {
+    const tokenFromUrl = searchParams.get('token') || searchParams.get('access_token')
+    if (tokenFromUrl) {
+      setToken(tokenFromUrl)
+    } else {
+      // If no token is found, redirect to forgot password page
+      toast.error('Invalid or missing reset token')
+      router.push('/auth/forgot-password')
+    }
+  }, [searchParams, router])
+
   const onSubmit = async (data: ResetPasswordFormData) => {
+    if (!token) {
+      toast.error('Invalid reset token')
+      return
+    }
+
     try {
-      const result = await resetPassword(data.password)
+      const result = await resetPassword(token, data.password)
       
       if (result.success) {
         setIsSuccess(true)
@@ -63,6 +82,20 @@ export function ResetPasswordForm() {
     }
   }
 
+  // Show loading state while extracting token
+  if (token === null) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900">Loading...</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Verifying your reset token...
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (isSuccess) {
     return (
       <div className="space-y-6">
@@ -72,7 +105,7 @@ export function ResetPasswordForm() {
           </div>
           <h2 className="mt-4 text-xl font-semibold text-gray-900">Password reset successful!</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Your password has been updated. You'll be redirected to your dashboard shortly.
+            Your password has been updated. You&apos;ll be redirected to your dashboard shortly.
           </p>
         </div>
 

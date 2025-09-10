@@ -29,6 +29,28 @@ const customRender = (
 export * from '@testing-library/react'
 export { customRender as render }
 
+// Test user accounts for RBAC testing
+export const TEST_USERS = {
+  FREE: {
+    email: 'free@bloomly.io',
+    password: 'TestPassword123!',
+    tier: 'free' as const,
+    fullName: 'Free User'
+  },
+  PRO: {
+    email: 'pro@bloomly.io', 
+    password: 'TestPassword123!',
+    tier: 'professional' as const,
+    fullName: 'Pro User'
+  },
+  ENTERPRISE: {
+    email: 'ent@bloomly.io',
+    password: 'TestPassword123!',
+    tier: 'enterprise' as const,
+    fullName: 'Enterprise User'
+  }
+} as const
+
 // Mock user data for tests
 export const mockUser = {
   id: '12345-67890-abcdef',
@@ -49,6 +71,33 @@ export const mockProfile = {
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
 }
+
+// Create mock users for each subscription tier
+export const createMockUserForTier = (tier: keyof typeof TEST_USERS) => {
+  const testUser = TEST_USERS[tier]
+  return {
+    user: {
+      ...mockUser,
+      id: `${tier.toLowerCase()}-user-id`,
+      email: testUser.email,
+      user_metadata: {
+        full_name: testUser.fullName,
+      },
+    },
+    profile: {
+      ...mockProfile,
+      id: `${tier.toLowerCase()}-user-id`,
+      email: testUser.email,
+      full_name: testUser.fullName,
+      subscription_tier: testUser.tier,
+    }
+  }
+}
+
+// Pre-built mock users for each tier
+export const mockFreeUser = createMockUserForTier('FREE')
+export const mockProUser = createMockUserForTier('PRO')
+export const mockEnterpriseUser = createMockUserForTier('ENTERPRISE')
 
 export const mockInstagramAccount = {
   id: 'ig-account-123',
@@ -91,25 +140,80 @@ export const mockAuthError = {
 
 // Helper to setup auth store with mock data
 export const setupMockAuthStore = (initialState = {}) => {
-  const { useAuthStore } = require('@/stores/useAuthStore')
-  
-  // Reset store state and ensure all methods are available
-  useAuthStore.setState({
+  // Create a mock store that behaves like Zustand
+  const mockStore = {
     user: null,
-    profile: null,
-    instagramAccounts: [],
     isLoading: false,
+    isInitialized: true,
     error: null,
+    signIn: jest.fn(),
+    signUp: jest.fn(),
+    signInWithGoogle: jest.fn(),
+    signOut: jest.fn(),
+    forgotPassword: jest.fn(),
+    resetPassword: jest.fn(),
+    initialize: jest.fn(),
+    clearError: jest.fn(),
+    setState: jest.fn(),
+    getState: jest.fn(() => mockStore),
     ...initialState,
-  })
-  
-  // Force re-initialization of store methods if needed
-  const storeState = useAuthStore.getState()
-  if (!storeState.setUser) {
-    console.warn('Store methods not initialized properly')
   }
   
-  return useAuthStore
+  // Update the getState function to return current state
+  mockStore.getState = jest.fn(() => mockStore)
+  
+  return mockStore
+}
+
+// Helper to setup auth store with specific user tier
+export const setupAuthStoreForTier = (tier: keyof typeof TEST_USERS) => {
+  const mockUserData = createMockUserForTier(tier)
+  return setupMockAuthStore({
+    user: {
+      id: mockUserData.user.id,
+      email: mockUserData.user.email,
+      fullName: mockUserData.user.user_metadata.full_name,
+      subscriptionTier: mockUserData.profile.subscription_tier,
+    },
+    isLoading: false,
+    isInitialized: true,
+    error: null,
+  })
+}
+
+// RBAC test helpers
+export const testRBACAccess = {
+  // Check if feature should be available for subscription tier
+  hasFeatureAccess: (tier: 'free' | 'professional' | 'enterprise', feature: string) => {
+    const features = {
+      free: ['basic_projects', 'limited_ai_generations'],
+      professional: ['basic_projects', 'unlimited_ai_generations', 'advanced_templates', 'priority_support'],
+      enterprise: ['all_features', 'custom_branding', 'api_access', 'dedicated_support']
+    }
+    return features[tier].includes(feature) || features[tier].includes('all_features')
+  },
+  
+  // Get subscription limits for testing
+  getLimitsForTier: (tier: 'free' | 'professional' | 'enterprise') => {
+    const limits = {
+      free: {
+        aiGenerationsPerMonth: 5,
+        projectsLimit: 3,
+        instagramAccountsLimit: 1,
+      },
+      professional: {
+        aiGenerationsPerMonth: 100, // changed from unlimited to match actual limits
+        projectsLimit: 50,
+        instagramAccountsLimit: 3, // changed from 5 to match actual limits
+      },
+      enterprise: {
+        aiGenerationsPerMonth: -1, // unlimited
+        projectsLimit: -1, // unlimited
+        instagramAccountsLimit: -1, // unlimited
+      }
+    }
+    return limits[tier]
+  }
 }
 
 // Helper to mock successful form submission

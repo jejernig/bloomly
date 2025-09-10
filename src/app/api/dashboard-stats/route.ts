@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,17 +24,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      data: dashboardData
-    })
+    return NextResponse.json(dashboardData)
   } catch (error) {
-    console.error('Dashboard stats error:', error)
+    console.error('Dashboard stats API error:', error)
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to fetch dashboard statistics'
-      },
+      { error: 'Failed to fetch dashboard statistics' },
       { status: 500 }
     )
   }

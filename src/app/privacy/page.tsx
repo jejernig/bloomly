@@ -48,7 +48,7 @@ export default function PrivacyPolicyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction and Data Controller Information</h2>
               <p className="text-gray-700 mb-4">
-                Bloomly.io ("Company," "we," "us," or "our") is committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered Instagram content creation platform for fashion boutiques ("Service," "Platform").
+                Bloomly.io (&ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) is committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered Instagram content creation platform for fashion boutiques (&ldquo;Service,&rdquo; &ldquo;Platform&rdquo;).
               </p>
               
               <h3 className="text-xl font-medium text-gray-800 mb-3">1.1 Data Controller Identity</h3>
