@@ -1,6 +1,6 @@
-# Taylor Collection Canvas Editor - Testing Suite
+# Bloomly.io Canvas Editor - Testing Suite
 
-This comprehensive testing suite provides end-to-end, accessibility, performance, and manual testing for the Taylor Collection canvas editor application.
+This comprehensive testing suite provides end-to-end, accessibility, performance, and manual testing for the Bloomly.io canvas editor application.
 
 ## 🚀 Quick Start
 

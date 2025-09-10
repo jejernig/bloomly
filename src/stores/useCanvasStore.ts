@@ -22,6 +22,15 @@ interface CanvasStore {
   lastRenderTime: number
   renderingThrottled: boolean
   
+  // Selective rendering
+  dirtyObjects: Set<string>
+  renderingRegion: { x: number; y: number; width: number; height: number } | null
+  selectiveRenderingEnabled: boolean
+  
+  // Object pooling
+  objectPools: Map<string, any[]>
+  poolingEnabled: boolean
+  
   // UI state
   zoom: number
   pan: Point
@@ -79,6 +88,21 @@ interface CanvasStore {
   enableVirtualization: () => void
   disableVirtualization: () => void
   
+  // Selective rendering
+  markObjectDirty: (objectId: string) => void
+  clearDirtyObjects: () => void
+  selectiveRender: () => void
+  enableSelectiveRendering: () => void
+  disableSelectiveRendering: () => void
+  
+  // Object pooling
+  getFromPool: (poolType: string) => any | null
+  returnToPool: (poolType: string, object: any) => void
+  initializePools: () => void
+  clearPools: () => void
+  enableObjectPooling: () => void
+  disableObjectPooling: () => void
+  
   // Template and project operations
   loadTemplate: (templateData: CanvasState) => void
   loadProject: (projectData: CanvasState) => void
@@ -114,6 +138,15 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
   renderTimeout: null,
   lastRenderTime: 0,
   renderingThrottled: false,
+  
+  // Selective rendering
+  dirtyObjects: new Set(),
+  renderingRegion: null,
+  selectiveRenderingEnabled: false,
+  
+  // Object pooling
+  objectPools: new Map(),
+  poolingEnabled: false,
   
   // UI state
   zoom: 1,
@@ -301,6 +334,8 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       fabricObject.set('visible', updates.visible)
     }
     
+    // Mark object as dirty for selective rendering
+    get().markObjectDirty(objectId)
     get().throttledRender()
     
     // Update state
@@ -655,7 +690,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     get().saveToHistory()
   },
   
-  // Performance optimizations for 50+ objects
+  // Performance optimizations with improved thresholds
   optimizeForObjectCount: () => {
     const { canvas, canvasState, deviceProfile } = get()
     if (!canvas) {
@@ -673,6 +708,11 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       canvas.selection = false // Disable multi-selection for performance
       set({ renderingThrottled: true })
       
+      // Enable viewport virtualization for very high object counts
+      get().enableVirtualization()
+      get().enableSelectiveRendering()
+      get().enableObjectPooling()
+      
       // Additional optimizations for very large object counts
       if (objectCount >= 100) {
         canvas.perPixelTargetFind = false
@@ -685,25 +725,60 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       }
     } else if (objectCount >= 20) {
       // Moderate optimizations for 20-49 objects
-      canvas.renderOnAddRemove = deviceProfile === 'high'
+      canvas.renderOnAddRemove = false // Always disable for better performance
       canvas.skipTargetFind = deviceProfile === 'low'
       canvas.imageSmoothingEnabled = deviceProfile === 'high'
-      set({ renderingThrottled: deviceProfile !== 'high' })
+      canvas.selection = true
+      canvas.allowTouchScrolling = true
+      set({ renderingThrottled: true })
+      
+      // Enable selective virtualization
+      get().enableVirtualization()
+      get().enableSelectiveRendering()
+      get().enableObjectPooling()
+    } else if (objectCount >= 10) {
+      // NEW: Early optimizations for 10-19 objects (addresses GitHub issue)
+      canvas.renderOnAddRemove = false // Disable automatic rendering
+      canvas.skipTargetFind = false
+      canvas.imageSmoothingEnabled = deviceProfile !== 'low'
+      canvas.selection = true
+      canvas.allowTouchScrolling = true
+      set({ renderingThrottled: deviceProfile === 'low' })
+      
+      // Light virtualization and selective rendering for medium object counts
+      if (deviceProfile === 'low') {
+        get().enableVirtualization()
+      }
+      get().enableSelectiveRendering()
     } else {
-      // Enable full features for < 20 objects
+      // Enable full features for < 10 objects
       canvas.renderOnAddRemove = true
       canvas.skipTargetFind = false
       canvas.imageSmoothingEnabled = true
       canvas.selection = true
       canvas.allowTouchScrolling = true
       set({ renderingThrottled: false })
+      
+      // Disable virtualization, selective rendering, and object pooling for small object counts
+      get().disableVirtualization()
+      get().disableSelectiveRendering()
+      get().disableObjectPooling()
     }
   },
   
   throttledRender: () => {
-    const { canvas, renderTimeout, renderingThrottled, lastRenderTime } = get()
-    if (!canvas || !renderingThrottled) {
-      canvas?.renderAll()
+    const { canvas, renderTimeout, renderingThrottled, lastRenderTime, selectiveRenderingEnabled } = get()
+    if (!canvas) {
+      return
+    }
+    
+    // If throttling is disabled, render immediately
+    if (!renderingThrottled) {
+      if (selectiveRenderingEnabled) {
+        get().selectiveRender()
+      } else {
+        canvas.renderAll()
+      }
       return
     }
     
@@ -712,7 +787,11 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     
     // If enough time has passed, render immediately
     if (timeSinceLastRender >= 16) { // ~60fps
-      get().throttledRender()
+      if (selectiveRenderingEnabled) {
+        get().selectiveRender()
+      } else {
+        canvas.renderAll()
+      }
       set({ lastRenderTime: now })
       return
     }
@@ -723,7 +802,12 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     }
     
     const timeout = setTimeout(() => {
-      get().throttledRender()
+      const store = get()
+      if (store.selectiveRenderingEnabled) {
+        store.selectiveRender()
+      } else {
+        canvas?.renderAll()
+      }
       set({ 
         lastRenderTime: Date.now(),
         renderTimeout: null 
@@ -787,6 +871,157 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     get().throttledRender()
   },
   
+  // Selective rendering methods
+  markObjectDirty: (objectId) => {
+    const { dirtyObjects } = get()
+    dirtyObjects.add(objectId)
+  },
+  
+  clearDirtyObjects: () => {
+    set(state => ({
+      dirtyObjects: new Set(),
+      renderingRegion: null
+    }))
+  },
+  
+  selectiveRender: () => {
+    const { canvas, dirtyObjects, selectiveRenderingEnabled } = get()
+    if (!canvas || !selectiveRenderingEnabled || dirtyObjects.size === 0) {
+      // Fall back to full render
+      canvas?.renderAll()
+      return
+    }
+    
+    // Calculate bounding box of dirty objects
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    let hasDirtyObjects = false
+    
+    dirtyObjects.forEach(objectId => {
+      const fabricObj = canvas.getObjects().find(obj => (obj as any).id === objectId)
+      if (fabricObj) {
+        const bounds = fabricObj.getBoundingRect()
+        minX = Math.min(minX, bounds.left)
+        minY = Math.min(minY, bounds.top)
+        maxX = Math.max(maxX, bounds.left + bounds.width)
+        maxY = Math.max(maxY, bounds.top + bounds.height)
+        hasDirtyObjects = true
+      }
+    })
+    
+    if (hasDirtyObjects) {
+      // Add some padding for antialiasing and effects
+      const padding = 20
+      const region = {
+        x: Math.max(0, minX - padding),
+        y: Math.max(0, minY - padding),
+        width: Math.min(canvas.getWidth() - (minX - padding), maxX - minX + padding * 2),
+        height: Math.min(canvas.getHeight() - (minY - padding), maxY - minY + padding * 2)
+      }
+      
+      // Store region for debugging/visualization
+      set({ renderingRegion: region })
+      
+      // Use canvas clipping to render only the dirty region
+      const ctx = canvas.getContext()
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(region.x, region.y, region.width, region.height)
+      ctx.clip()
+      
+      // Render all objects (they'll be clipped to the region)
+      canvas.renderAll()
+      
+      ctx.restore()
+      
+      // Clear dirty objects after rendering
+      get().clearDirtyObjects()
+    } else {
+      // No dirty objects found, do full render
+      canvas.renderAll()
+    }
+  },
+  
+  enableSelectiveRendering: () => {
+    const { canvasState } = get()
+    // Enable selective rendering for medium to high object counts
+    const shouldEnable = canvasState.objects.length >= 15
+    set({ selectiveRenderingEnabled: shouldEnable })
+  },
+  
+  disableSelectiveRendering: () => {
+    set({ 
+      selectiveRenderingEnabled: false,
+      dirtyObjects: new Set(),
+      renderingRegion: null
+    })
+  },
+  
+  // Object pooling methods
+  getFromPool: (poolType) => {
+    const { objectPools, poolingEnabled } = get()
+    if (!poolingEnabled || !objectPools.has(poolType)) {
+      return null
+    }
+    
+    const pool = objectPools.get(poolType)
+    return pool && pool.length > 0 ? pool.pop() : null
+  },
+  
+  returnToPool: (poolType, object) => {
+    const { objectPools, poolingEnabled } = get()
+    if (!poolingEnabled) {
+      return
+    }
+    
+    if (!objectPools.has(poolType)) {
+      objectPools.set(poolType, [])
+    }
+    
+    const pool = objectPools.get(poolType)
+    if (pool && pool.length < 50) { // Limit pool size to prevent memory bloat
+      // Reset object properties for reuse
+      if (typeof object.reset === 'function') {
+        object.reset()
+      } else if (typeof object.clear === 'function') {
+        object.clear()
+      }
+      
+      pool.push(object)
+    }
+  },
+  
+  initializePools: () => {
+    const pools = new Map<string, any[]>([
+      ['point', []],
+      ['rect', []],
+      ['transform', []],
+      ['bounds', []]
+    ])
+    
+    // Pre-populate with some commonly used objects
+    for (let i = 0; i < 10; i++) {
+      pools.get('point')?.push(new fabric.Point(0, 0))
+      pools.get('bounds')?.push({ x: 0, y: 0, width: 0, height: 0 })
+    }
+    
+    set({ objectPools: pools })
+  },
+  
+  clearPools: () => {
+    const { objectPools } = get()
+    objectPools.clear()
+  },
+  
+  enableObjectPooling: () => {
+    get().initializePools()
+    set({ poolingEnabled: true })
+  },
+  
+  disableObjectPooling: () => {
+    get().clearPools()
+    set({ poolingEnabled: false })
+  },
+  
   cleanup: () => {
     const { canvas, historySaveTimeout, renderTimeout } = get()
     
@@ -797,6 +1032,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
     if (renderTimeout) {
       clearTimeout(renderTimeout)
     }
+    
+    // Clear object pools
+    get().clearPools()
     
     if (canvas) {
       canvas.off()
@@ -814,6 +1052,12 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
       lastRenderTime: 0,
       renderingThrottled: false,
       error: null,
+      // Reset performance optimizations
+      dirtyObjects: new Set(),
+      renderingRegion: null,
+      selectiveRenderingEnabled: false,
+      objectPools: new Map(),
+      poolingEnabled: false,
     })
   },
   

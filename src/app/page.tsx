@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: 'AI-Powered Instagram Content Creator for Fashion Boutiques',
   description: 'Create stunning Instagram posts in minutes with AI-powered design tools, fashion-focused templates, and direct publishing. Perfect for boutique owners and fashion retailers.',
   openGraph: {
-    title: 'Taylor Collection - Transform Your Boutique\'s Instagram Presence',
+    title: 'Bloomly.io - Transform Your Boutique\'s Instagram Presence',
     description: 'Create stunning Instagram posts in minutes with AI-powered design tools, fashion-focused templates, and direct publishing.',
   },
 }

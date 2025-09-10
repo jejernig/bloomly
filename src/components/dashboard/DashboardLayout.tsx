@@ -61,7 +61,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200">
             <Link href="/dashboard" className="flex items-center">
               <div className="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                <h1 className="text-xl font-bold font-fashion">Taylor Collection</h1>
+                <h1 className="text-xl font-bold font-fashion">Bloomly.io</h1>
               </div>
             </Link>
             <button
@@ -151,7 +151,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="p-6">
+        <main className="p-4 sm:p-6">
           {children}
         </main>
       </div>

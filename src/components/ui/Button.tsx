@@ -45,6 +45,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button
+        type="button"
         className={clsx(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={isDisabled}

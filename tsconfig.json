@@ -32,5 +32,5 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "tests/**/*", "playwright-report/**/*", "test-results/**/*"]
+  "exclude": ["node_modules", "tests/**/*", "playwright-report/**/*", "test-results/**/*", "**/*.test.tsx", "**/*.test.ts", "**/test-utils.tsx"]
 }

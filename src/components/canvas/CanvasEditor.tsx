@@ -18,6 +18,9 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
   const [isInitialized, setIsInitialized] = useState(false)
   const [focusedObjectIndex, setFocusedObjectIndex] = useState<number>(-1)
   const [announcement, setAnnouncement] = useState<string>('')
+  const [currentTool, setCurrentTool] = useState<string>('select')
+  const [isManipulating, setIsManipulating] = useState<boolean>(false)
+  const [keyboardMode, setKeyboardMode] = useState<'navigate' | 'manipulate' | 'create'>('navigate')
   
   const {
     canvas,
@@ -34,7 +37,15 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
     cleanup,
     setSelectedObject,
     selectedObjectId,
+    undo,
+    redo,
+    history,
+    historyStep,
   } = useCanvasStore()
+  
+  // Compute undo/redo availability
+  const canUndo = historyStep > 0
+  const canRedo = historyStep < history.length - 1
 
   // Touch handling for mobile
   const [touchData, setTouchData] = useState<{
@@ -92,9 +103,13 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
       defaultCursor: 'default',
     })
 
-    // Add accessibility features to canvas
-    fabricCanvas.upperCanvasEl.setAttribute('role', 'img')
+    // Add comprehensive accessibility features to canvas
+    fabricCanvas.upperCanvasEl.setAttribute('role', 'application')
     fabricCanvas.upperCanvasEl.setAttribute('tabindex', '0')
+    fabricCanvas.upperCanvasEl.setAttribute('aria-label', 'Interactive design canvas')
+    fabricCanvas.upperCanvasEl.setAttribute('aria-describedby', 'canvas-instructions canvas-status')
+    fabricCanvas.upperCanvasEl.setAttribute('aria-live', 'polite')
+    fabricCanvas.upperCanvasEl.setAttribute('aria-atomic', 'false')
     
     // Canvas selection handlers for accessibility  
     const handleSelectionCreated = (e: any) => {
@@ -261,65 +276,281 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
     }
   }, [canvasState])
   
-  // Keyboard navigation handler
+  // Enhanced keyboard navigation and tool control
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!canvas) {
       return
     }
     
     const objects = canvas.getObjects()
-    if (objects.length === 0) {
-      return
+    const activeObject = canvas.getActiveObject()
+    
+    // Handle modifier key combinations first
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 'z':
+          e.preventDefault()
+          if (e.shiftKey) {
+            if (canRedo) {
+              redo()
+              announceToScreenReader('Redid last action')
+            } else {
+              announceToScreenReader('Nothing to redo')
+            }
+          } else {
+            if (canUndo) {
+              undo()
+              announceToScreenReader('Undid last action')
+            } else {
+              announceToScreenReader('Nothing to undo')
+            }
+          }
+          return
+        case 'a':
+          e.preventDefault()
+          if (objects.length > 0) {
+            const selection = new fabric.ActiveSelection(objects, {
+              canvas: canvas,
+            })
+            canvas.setActiveObject(selection)
+            canvas.renderAll()
+            announceToScreenReader(`Selected all ${objects.length} objects`)
+          }
+          return
+        case 'c':
+          e.preventDefault()
+          if (activeObject) {
+            // Store object for paste (simplified - in real app would use clipboard)
+            (window as any).copiedObject = activeObject.toObject()
+            announceToScreenReader('Copied object')
+          }
+          return
+        case 'v':
+          e.preventDefault()
+          if ((window as any).copiedObject) {
+            fabric.util.enlivenObjects([(window as any).copiedObject]).then((objects: any[]) => {
+              const newObj = objects[0]
+              newObj.set({
+                left: (newObj.left || 0) + 20,
+                top: (newObj.top || 0) + 20,
+              })
+              canvas.add(newObj)
+              canvas.setActiveObject(newObj)
+              canvas.renderAll()
+              announceToScreenReader('Pasted object')
+            })
+          }
+          return
+        case 'd':
+          e.preventDefault()
+          if (activeObject) {
+            // Fabric.js v6 clone API - use async clone method
+            activeObject.clone().then((cloned: any) => {
+              cloned.set({
+                left: (cloned.left || 0) + 20,
+                top: (cloned.top || 0) + 20,
+              })
+              canvas.add(cloned)
+              canvas.setActiveObject(cloned)
+              canvas.renderAll()
+              announceToScreenReader('Duplicated object')
+            })
+          }
+          return
+        case '=':
+        case '+':
+          e.preventDefault()
+          const newZoom = Math.min(zoom * 1.2, 5)
+          setZoom(newZoom)
+          announceToScreenReader(`Zoomed in to ${Math.round(newZoom * 100)}%`)
+          return
+        case '-':
+          e.preventDefault()
+          const reducedZoom = Math.max(zoom * 0.8, 0.1)
+          setZoom(reducedZoom)
+          announceToScreenReader(`Zoomed out to ${Math.round(reducedZoom * 100)}%`)
+          return
+        case '0':
+          e.preventDefault()
+          setZoom(1)
+          announceToScreenReader('Reset zoom to 100%')
+          return
+      }
     }
     
+    // Tool selection shortcuts (numbers)
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      switch (e.key) {
+        case '1':
+          e.preventDefault()
+          setCurrentTool('select')
+          announceToScreenReader('Select tool activated')
+          return
+        case '2':
+          e.preventDefault()
+          setCurrentTool('rectangle')
+          announceToScreenReader('Rectangle tool activated. Press Enter to create rectangle')
+          return
+        case '3':
+          e.preventDefault()
+          setCurrentTool('circle')
+          announceToScreenReader('Circle tool activated. Press Enter to create circle')
+          return
+        case '4':
+          e.preventDefault()
+          setCurrentTool('text')
+          announceToScreenReader('Text tool activated. Press Enter to create text')
+          return
+        case '5':
+          e.preventDefault()
+          setCurrentTool('line')
+          announceToScreenReader('Line tool activated. Press Enter to create line')
+          return
+      }
+    }
+    
+    // Navigation and object manipulation
     switch (e.key) {
       case 'ArrowDown':
       case 'ArrowRight':
         e.preventDefault()
-        if (focusedObjectIndex < objects.length - 1) {
-          const nextIndex = focusedObjectIndex + 1
-          const nextObject = objects[nextIndex]
-          canvas.setActiveObject(nextObject)
-          setFocusedObjectIndex(nextIndex)
-          const description = getObjectDescription(nextObject)
-          announceToScreenReader(`Focused on ${description}`)
+        if (keyboardMode === 'manipulate' && activeObject && !e.shiftKey) {
+          // Move object
+          const step = e.ctrlKey ? 1 : 10
+          if (e.key === 'ArrowDown') {
+            activeObject.set({ top: (activeObject.top || 0) + step })
+          } else {
+            activeObject.set({ left: (activeObject.left || 0) + step })
+          }
+          canvas.renderAll()
+          const description = getObjectDescription(activeObject)
+          announceToScreenReader(`Moved ${description}`)
+        } else if (keyboardMode === 'manipulate' && activeObject && e.shiftKey) {
+          // Resize object
+          const scale = activeObject.scaleX || 1
+          const newScale = Math.min(scale * 1.1, 5)
+          activeObject.set({ scaleX: newScale, scaleY: newScale })
+          canvas.renderAll()
+          announceToScreenReader(`Resized object to ${Math.round(newScale * 100)}%`)
         } else {
-          // Wrap to first object
-          const firstObject = objects[0]
-          canvas.setActiveObject(firstObject)
-          setFocusedObjectIndex(0)
-          const description = getObjectDescription(firstObject)
-          announceToScreenReader(`Focused on ${description}`)
+          // Navigate between objects
+          if (objects.length === 0) { return }
+          if (focusedObjectIndex < objects.length - 1) {
+            const nextIndex = focusedObjectIndex + 1
+            const nextObject = objects[nextIndex]
+            canvas.setActiveObject(nextObject)
+            setFocusedObjectIndex(nextIndex)
+            const description = getObjectDescription(nextObject)
+            announceToScreenReader(`Focused on ${description}. Press M to manipulate, N to navigate`)
+          } else {
+            const firstObject = objects[0]
+            canvas.setActiveObject(firstObject)
+            setFocusedObjectIndex(0)
+            const description = getObjectDescription(firstObject)
+            announceToScreenReader(`Focused on ${description}. Press M to manipulate, N to navigate`)
+          }
+          canvas.renderAll()
         }
-        canvas.renderAll()
         break
         
       case 'ArrowUp':
       case 'ArrowLeft':
         e.preventDefault()
-        if (focusedObjectIndex > 0) {
-          const prevIndex = focusedObjectIndex - 1
-          const prevObject = objects[prevIndex]
-          canvas.setActiveObject(prevObject)
-          setFocusedObjectIndex(prevIndex)
-          const description = getObjectDescription(prevObject)
-          announceToScreenReader(`Focused on ${description}`)
+        if (keyboardMode === 'manipulate' && activeObject && !e.shiftKey) {
+          // Move object
+          const step = e.ctrlKey ? 1 : 10
+          if (e.key === 'ArrowUp') {
+            activeObject.set({ top: (activeObject.top || 0) - step })
+          } else {
+            activeObject.set({ left: (activeObject.left || 0) - step })
+          }
+          canvas.renderAll()
+          const description = getObjectDescription(activeObject)
+          announceToScreenReader(`Moved ${description}`)
+        } else if (keyboardMode === 'manipulate' && activeObject && e.shiftKey) {
+          // Resize object
+          const scale = activeObject.scaleX || 1
+          const newScale = Math.max(scale * 0.9, 0.1)
+          activeObject.set({ scaleX: newScale, scaleY: newScale })
+          canvas.renderAll()
+          announceToScreenReader(`Resized object to ${Math.round(newScale * 100)}%`)
         } else {
-          // Wrap to last object
-          const lastIndex = objects.length - 1
-          const lastObject = objects[lastIndex]
-          canvas.setActiveObject(lastObject)
-          setFocusedObjectIndex(lastIndex)
-          const description = getObjectDescription(lastObject)
-          announceToScreenReader(`Focused on ${description}`)
+          // Navigate between objects
+          if (objects.length === 0) { return }
+          if (focusedObjectIndex > 0) {
+            const prevIndex = focusedObjectIndex - 1
+            const prevObject = objects[prevIndex]
+            canvas.setActiveObject(prevObject)
+            setFocusedObjectIndex(prevIndex)
+            const description = getObjectDescription(prevObject)
+            announceToScreenReader(`Focused on ${description}. Press M to manipulate, N to navigate`)
+          } else {
+            const lastIndex = objects.length - 1
+            const lastObject = objects[lastIndex]
+            canvas.setActiveObject(lastObject)
+            setFocusedObjectIndex(lastIndex)
+            const description = getObjectDescription(lastObject)
+            announceToScreenReader(`Focused on ${description}. Press M to manipulate, N to navigate`)
+          }
+          canvas.renderAll()
         }
-        canvas.renderAll()
         break
         
       case 'Enter':
-      case ' ':
         e.preventDefault()
-        if (focusedObjectIndex >= 0 && focusedObjectIndex < objects.length) {
+        if (currentTool !== 'select' && keyboardMode === 'create') {
+          // Create new object
+          const centerX = canvas.width! / 2
+          const centerY = canvas.height! / 2
+          let newObject: fabric.Object
+          
+          switch (currentTool) {
+            case 'rectangle':
+              newObject = new fabric.Rect({
+                left: centerX - 50,
+                top: centerY - 25,
+                width: 100,
+                height: 50,
+                fill: '#3b82f6',
+                stroke: '#1d4ed8',
+                strokeWidth: 2,
+              })
+              break
+            case 'circle':
+              newObject = new fabric.Circle({
+                left: centerX - 25,
+                top: centerY - 25,
+                radius: 25,
+                fill: '#10b981',
+                stroke: '#059669',
+                strokeWidth: 2,
+              })
+              break
+            case 'text':
+              newObject = new fabric.Text('New Text', {
+                left: centerX - 40,
+                top: centerY - 10,
+                fontSize: 20,
+                fill: '#1f2937',
+              })
+              break
+            case 'line':
+              newObject = new fabric.Line([centerX - 50, centerY, centerX + 50, centerY], {
+                stroke: '#ef4444',
+                strokeWidth: 3,
+              })
+              break
+            default:
+              return
+          }
+          
+          canvas.add(newObject)
+          canvas.setActiveObject(newObject)
+          canvas.renderAll()
+          setFocusedObjectIndex(objects.length)
+          const description = getObjectDescription(newObject)
+          announceToScreenReader(`Created ${description}`)
+        } else if (focusedObjectIndex >= 0 && focusedObjectIndex < objects.length) {
           const object = objects[focusedObjectIndex]
           const description = getObjectDescription(object)
           announceToScreenReader(`Selected ${description}`)
@@ -327,15 +558,23 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
         }
         break
         
+      case ' ':
+        e.preventDefault()
+        if (focusedObjectIndex >= 0 && focusedObjectIndex < objects.length) {
+          const object = objects[focusedObjectIndex]
+          const description = getObjectDescription(object)
+          announceToScreenReader(`Activated ${description}`)
+        }
+        break
+        
       case 'Delete':
       case 'Backspace':
         e.preventDefault()
-        if (canvas.getActiveObject()) {
-          const activeObject = canvas.getActiveObject()
-          const description = getObjectDescription(activeObject!)
-          canvas.remove(activeObject!)
-          announceToScreenReader(`Deleted ${description}`)
+        if (activeObject) {
+          const description = getObjectDescription(activeObject)
+          canvas.remove(activeObject)
           setFocusedObjectIndex(-1)
+          announceToScreenReader(`Deleted ${description}`)
         }
         break
         
@@ -344,10 +583,48 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
         canvas.discardActiveObject()
         canvas.renderAll()
         setFocusedObjectIndex(-1)
-        announceToScreenReader('Selection cleared')
+        setKeyboardMode('navigate')
+        announceToScreenReader('Selection cleared, navigation mode')
+        break
+        
+      case 'm':
+      case 'M':
+        e.preventDefault()
+        if (activeObject) {
+          setKeyboardMode('manipulate')
+          announceToScreenReader('Manipulation mode. Use arrow keys to move, Shift+arrows to resize')
+        }
+        break
+        
+      case 'n':
+      case 'N':
+        e.preventDefault()
+        setKeyboardMode('navigate')
+        announceToScreenReader('Navigation mode. Use arrow keys to move between objects')
+        break
+        
+      case 'c':
+        if (!e.ctrlKey && !e.metaKey) {
+          e.preventDefault()
+          setKeyboardMode('create')
+          announceToScreenReader(`Create mode. Current tool: ${currentTool}. Press Enter to create object`)
+        }
+        break
+        
+      case 'Tab':
+        if (!e.shiftKey) {
+          // Allow normal tab navigation
+        }
+        break
+        
+      case 'h':
+      case 'H':
+      case '?':
+        e.preventDefault()
+        announceToScreenReader('Keyboard shortcuts: 1-5 for tools, Ctrl+Z undo, Ctrl+Y redo, M manipulate, N navigate, C create, Enter to create/select, Delete to remove, Escape to clear')
         break
     }
-  }, [canvas, focusedObjectIndex, getObjectDescription, announceToScreenReader, setSelectedObject])
+  }, [canvas, focusedObjectIndex, getObjectDescription, announceToScreenReader, setSelectedObject, currentTool, keyboardMode, canUndo, canRedo, undo, redo, zoom, setZoom])
 
   // Touch event handlers for mobile gestures
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -522,6 +799,7 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
   return (
     <div 
       ref={containerRef}
+      data-testid="canvas-container"
       className={clsx(
         'canvas-container relative bg-gray-50 overflow-hidden',
         isMobile ? 'touch-optimized' : '',
@@ -532,7 +810,7 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
       onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
     >
-      {/* Screen reader announcements */}
+      {/* Enhanced accessibility announcements */}
       <div
         ref={liveRegionRef}
         className="sr-only"
@@ -542,22 +820,43 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
         {announcement}
       </div>
       
-      {/* Canvas instructions for screen readers */}
+      {/* Canvas status region */}
+      <div
+        id="canvas-status"
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="false"
+      >
+        Mode: {keyboardMode}. Tool: {currentTool}. Objects: {canvasState?.objects?.length || 0}. Zoom: {Math.round(zoom * 100)}%.
+      </div>
+      
+      {/* Comprehensive canvas instructions for screen readers */}
       <div className="sr-only">
-        <h2>Canvas Editor</h2>
-        <p>
-          Use arrow keys to navigate between objects on the canvas.
-          Press Enter or Space to select an object.
-          Press Delete to remove selected object.
-          Press Escape to clear selection.
-        </p>
+        <h2>Canvas Editor - Interactive Design Tool</h2>
+        <p>This is an interactive design canvas. You can create, select, and manipulate objects using comprehensive keyboard commands.</p>
+        
+        <h3>Tool Selection:</h3>
+        <p>Press 1 for Select tool, 2 for Rectangle, 3 for Circle, 4 for Text, 5 for Line</p>
+        
+        <h3>Object Creation:</h3>
+        <p>Select a tool (2-5), press C for create mode, then Enter to create object at center</p>
+        
+        <h3>Navigation Modes:</h3>
+        <p>Press N for navigation mode - use arrow keys to move between objects</p>
+        <p>Press M for manipulation mode - use arrow keys to move objects, Shift+arrows to resize</p>
+        <p>Press C for create mode - press Enter to create objects with selected tool</p>
+        
+        <h3>Keyboard Shortcuts:</h3>
+        <p>Ctrl+Z: Undo, Ctrl+Shift+Z: Redo, Ctrl+A: Select all, Ctrl+C: Copy, Ctrl+V: Paste, Ctrl+D: Duplicate</p>
+        <p>Ctrl+Plus: Zoom in, Ctrl+Minus: Zoom out, Ctrl+0: Reset zoom</p>
+        <p>Enter/Space: Select, Delete: Remove, Escape: Clear selection, H: Help</p>
       </div>
       
       <canvas
         ref={canvasRef}
         className="mx-auto my-auto block border border-gray-200 shadow-sm bg-white"
         aria-label={getCanvasDescription()}
-        aria-describedby="canvas-instructions"
+        aria-describedby="canvas-instructions canvas-status"
         onKeyDown={handleKeyDown}
         style={{
           touchAction: 'none',
@@ -565,13 +864,27 @@ export function CanvasEditor({ className, isMobile = false }: CanvasEditorProps)
         }}
       />
       
-      {/* Hidden instructions for screen readers */}
+      {/* Detailed instructions for screen readers */}
       <div id="canvas-instructions" className="sr-only">
-        <p>Interactive canvas for creating and editing designs.</p>
-        <p>Navigation: Use arrow keys to move between objects.</p>
-        <p>Selection: Press Enter or Space to select focused object.</p>
-        <p>Actions: Press Delete to remove selected object, Escape to clear selection.</p>
-        <p>Current canvas state: {getCanvasDescription()}</p>
+        <h3>Interactive Design Canvas</h3>
+        <p>This canvas supports full keyboard navigation with comprehensive screen reader support.</p>
+        
+        <h4>Current Status:</h4>
+        <p>Mode: {keyboardMode}, Tool: {currentTool}, Objects: {canvasState?.objects?.length || 0}</p>
+        <p>Canvas state: {getCanvasDescription()}</p>
+        
+        <h4>Quick Start:</h4>
+        <p>Press H for complete help, 1-5 to select tools, N to navigate, M to manipulate, C to create</p>
+        
+        <h4>Navigation Modes:</h4>
+        <p>Navigate mode (N): Move between objects with arrow keys, objects announced when focused</p>
+        <p>Manipulate mode (M): Move selected object with arrows, resize with Shift+arrows</p>
+        <p>Create mode (C): Create new objects at canvas center with Enter key</p>
+        
+        <h4>Accessibility Features:</h4>
+        <p>All actions are announced to screen readers with object descriptions and positions</p>
+        <p>Canvas state changes are reported in real-time</p>
+        <p>Comprehensive keyboard navigation eliminates need for mouse interaction</p>
       </div>
       
       {/* Canvas overlay for mobile gestures */}

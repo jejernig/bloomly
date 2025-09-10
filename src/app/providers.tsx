@@ -58,7 +58,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mb-4"></div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Taylor Collection</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Bloomly.io</h2>
           <p className="text-sm text-gray-600">Initializing your workspace...</p>
         </div>
       </div>

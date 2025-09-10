@@ -148,7 +148,7 @@ export function SignUpForm() {
           <div className="w-full border-t border-gray-300" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">Or create account with email</span>
+          <span className="px-2 bg-white text-muted-foreground">Or create account with email</span>
         </div>
       </div>
 
@@ -159,6 +159,7 @@ export function SignUpForm() {
           type="text"
           placeholder="Enter your full name"
           leftIcon={<User className="h-4 w-4" />}
+          autoComplete="name"
           error={errors.fullName?.message}
           {...register('fullName')}
         />
@@ -168,6 +169,7 @@ export function SignUpForm() {
           type="email"
           placeholder="Enter your email"
           leftIcon={<Mail className="h-4 w-4" />}
+          autoComplete="email"
           error={errors.email?.message}
           {...register('email')}
         />
@@ -187,6 +189,7 @@ export function SignUpForm() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             }
+            autoComplete="new-password"
             error={errors.password?.message}
             {...register('password')}
           />
@@ -223,6 +226,7 @@ export function SignUpForm() {
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           }
+          autoComplete="new-password"
           error={errors.confirmPassword?.message}
           {...register('confirmPassword')}
         />
@@ -231,6 +235,7 @@ export function SignUpForm() {
           <input
             id="terms"
             type="checkbox"
+            autoComplete="off"
             className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-0.5"
             {...register('terms')}
           />
@@ -261,8 +266,8 @@ export function SignUpForm() {
       </form>
 
       <div className="text-center">
-        <p className="text-xs text-gray-500">
-          By signing up, you agree to receive marketing emails from Taylor Collection.
+        <p className="text-xs text-muted-foreground">
+          By signing up, you agree to receive marketing emails from Bloomly.io.
           You can unsubscribe at any time.
         </p>
       </div>

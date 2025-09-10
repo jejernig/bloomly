@@ -36,27 +36,27 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <div className="py-24 sm:py-32" id="features">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:text-center">
-          <h2 className="text-base font-semibold leading-7 text-primary-600">Everything you need</h2>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+    <div className="py-16 sm:py-20 md:py-24 lg:py-32" id="features">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center lg:text-center">
+          <h2 className="text-sm sm:text-base font-semibold leading-7 text-primary-600">Everything you need</h2>
+          <p className="mt-2 text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gray-900">
             Professional Instagram content made simple
           </p>
-          <p className="mt-6 text-lg leading-8 text-gray-600">
+          <p className="mt-4 sm:mt-6 text-base sm:text-lg leading-6 sm:leading-8 text-gray-600 px-4 sm:px-0">
             Stop spending hours on content creation. Our AI-powered platform helps fashion boutiques create 
             engaging Instagram posts in minutes, not hours.
           </p>
         </div>
-        <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-          <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+        <div className="mx-auto mt-10 sm:mt-12 md:mt-16 lg:mt-20 xl:mt-24 max-w-2xl sm:max-w-none">
+          <dl className="grid max-w-xl grid-cols-1 gap-x-6 sm:gap-x-8 gap-y-10 sm:gap-y-12 md:gap-y-16 sm:grid-cols-2 lg:max-w-none lg:grid-cols-3">
             {features.map((feature) => (
               <div key={feature.name} className="flex flex-col">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                  <feature.icon className="h-5 w-5 flex-none text-primary-600" aria-hidden="true" />
-                  {feature.name}
+                <dt className="flex items-center gap-x-3 text-base sm:text-lg font-semibold leading-6 sm:leading-7 text-gray-900">
+                  <feature.icon className="h-6 w-6 sm:h-7 sm:w-7 flex-none text-primary-600" aria-hidden="true" />
+                  <span className="text-sm sm:text-base md:text-lg">{feature.name}</span>
                 </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                <dd className="mt-3 sm:mt-4 flex flex-auto flex-col text-sm sm:text-base leading-6 sm:leading-7 text-gray-600">
                   <p className="flex-auto">{feature.description}</p>
                 </dd>
               </div>

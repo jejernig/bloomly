@@ -6,7 +6,7 @@ const testimonials = [
     name: 'Sarah Chen',
     business: 'Bloom Boutique',
     location: 'San Francisco, CA',
-    content: 'Taylor Collection transformed how we create Instagram content. What used to take hours now takes minutes, and our engagement has increased by 300%!',
+    content: 'Bloomly.io transformed how we create Instagram content. What used to take hours now takes minutes, and our engagement has increased by 300%!',
     rating: 5,
     avatar: '/testimonials/sarah-chen.jpg',
   },
@@ -22,7 +22,7 @@ const testimonials = [
     name: 'Emma Thompson',
     business: 'Vintage Vibes',
     location: 'Austin, TX',
-    content: 'As a small boutique owner, I dont have time for complex design tools. Taylor Collection makes it so easy to create beautiful posts that actually drive sales.',
+    content: 'As a small boutique owner, I dont have time for complex design tools. Bloomly.io makes it so easy to create beautiful posts that actually drive sales.',
     rating: 5,
     avatar: '/testimonials/emma-thompson.jpg',
   },
@@ -37,7 +37,7 @@ export function TestimonialsSection() {
             Loved by boutique owners everywhere
           </h2>
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            See how fashion entrepreneurs are growing their businesses with Taylor Collection
+            See how fashion entrepreneurs are growing their businesses with Bloomly.io
           </p>
         </div>
 

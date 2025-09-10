@@ -1,7 +1,7 @@
 # UAT Testing Session - Comprehensive Cleanup Report
 
 **Date**: September 9, 2025  
-**Project**: Taylor Collection - AI Instagram Content Creator  
+**Project**: Bloomly.io - AI Instagram Content Creator  
 **Status**: ✅ CLEANUP COMPLETED
 
 ## 📋 Cleanup Tasks Completed

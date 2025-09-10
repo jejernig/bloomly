@@ -15,7 +15,7 @@ export class APIError extends Error {
 }
 
 // Generic API request function
-async function apiRequest<T = any>(
+export async function apiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<APIResponse<T>> {
@@ -141,17 +141,108 @@ export function handleAPIError(error: any): string {
   return 'An unexpected error occurred'
 }
 
-// Toast notification helpers (can be integrated with your toast library)
+// Toast notification helpers (integrated with react-hot-toast)
+import { toast } from 'react-hot-toast'
+
 export function showErrorToast(error: any) {
   const message = handleAPIError(error)
   console.error('API Error:', message, error)
-  // You can integrate with your preferred toast library here
-  // toast.error(message)
+  toast.error(message)
 }
 
 export function showSuccessToast(message: string) {
   // eslint-disable-next-line no-console
   console.log('Success:', message)
-  // You can integrate with your preferred toast library here
-  // toast.success(message)
+  toast.success(message)
+}
+
+// Enhanced API request wrapper with automatic retry logic
+async function apiRequestWithRetry<T = any>(
+  endpoint: string,
+  options: RequestInit = {},
+  maxRetries: number = 3
+): Promise<APIResponse<T>> {
+  let lastError: APIError | Error
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await apiRequest<T>(endpoint, options)
+    } catch (error) {
+      lastError = error as APIError | Error
+      
+      // Don't retry for client errors (4xx) or on the last attempt
+      if (attempt === maxRetries || (error instanceof APIError && error.status >= 400 && error.status < 500)) {
+        throw lastError
+      }
+      
+      // Wait before retrying with exponential backoff
+      const delay = Math.min(1000 * Math.pow(2, attempt), 5000)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+  
+  throw lastError!
+}
+
+// Updated project API functions with retry logic
+export const projectsAPIWithRetry = {
+  // Get all user projects with retry
+  async list(): Promise<APIResponse<Project[]>> {
+    return apiRequestWithRetry<Project[]>('/projects')
+  },
+
+  // Get specific project by ID with retry
+  async get(id: string): Promise<APIResponse<Project>> {
+    return apiRequestWithRetry<Project>(`/projects/${id}`)
+  },
+
+  // Create new project with retry
+  async create(data: {
+    title: string
+    description?: string
+    canvasData: CanvasState
+    thumbnailUrl?: string
+    tags?: string[]
+  }): Promise<APIResponse<Project>> {
+    return apiRequestWithRetry<Project>('/projects', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }, 1) // Only retry once for creation operations
+  },
+
+  // Update existing project with retry
+  async update(
+    id: string,
+    data: Partial<{
+      title: string
+      description: string
+      canvasData: CanvasState
+      thumbnailUrl: string
+      tags: string[]
+    }>
+  ): Promise<APIResponse<Project>> {
+    return apiRequestWithRetry<Project>(`/projects/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }, 1) // Only retry once for update operations
+  },
+
+  // Delete project with retry
+  async delete(id: string): Promise<APIResponse<void>> {
+    return apiRequestWithRetry<void>(`/projects/${id}`, {
+      method: 'DELETE',
+    }, 1) // Only retry once for delete operations
+  },
+
+  // Save canvas state to project (convenience method with retry)
+  async saveCanvas(
+    projectId: string, 
+    canvasData: CanvasState,
+    thumbnailUrl?: string
+  ): Promise<APIResponse<Project>> {
+    return this.update(projectId, { 
+      canvasData,
+      ...(thumbnailUrl && { thumbnailUrl })
+    })
+  }
 }

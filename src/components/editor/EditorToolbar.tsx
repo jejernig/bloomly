@@ -55,7 +55,7 @@ export function EditorToolbar({ isMobile = false, onToggleSidebar }: EditorToolb
       
       // Create download link
       const link = document.createElement('a')
-      link.download = `taylor-collection-post-${Date.now()}.png`
+      link.download = `bloomly-io-post-${Date.now()}.png`
       link.href = dataURL
       document.body.appendChild(link)
       link.click()

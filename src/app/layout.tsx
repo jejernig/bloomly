@@ -24,8 +24,8 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Taylor Collection',
-    default: 'Taylor Collection - AI-Powered Instagram Content Creator for Boutiques',
+    template: '%s | Bloomly.io',
+    default: 'Bloomly.io - AI-Powered Instagram Content Creator for Boutiques',
   },
   description: 'Create stunning Instagram content for your fashion boutique in minutes with AI-powered design tools, templates, and direct publishing.',
   keywords: [
@@ -38,40 +38,40 @@ export const metadata: Metadata = {
     'instagram publishing',
     'boutique social media',
   ],
-  authors: [{ name: 'Taylor Collection' }],
-  creator: 'Taylor Collection',
-  publisher: 'Taylor Collection',
+  authors: [{ name: 'Bloomly.io' }],
+  creator: 'Bloomly.io',
+  publisher: 'Bloomly.io',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://taylorcollection.app'),
+  metadataBase: new URL('https://bloomly.io'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://taylorcollection.app',
-    title: 'Taylor Collection - AI-Powered Instagram Content Creator',
+    url: 'https://bloomly.io',
+    title: 'Bloomly.io - AI-Powered Instagram Content Creator',
     description: 'Create stunning Instagram content for your fashion boutique in minutes with AI-powered design tools.',
-    siteName: 'Taylor Collection',
+    siteName: 'Bloomly.io',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Taylor Collection - AI-Powered Instagram Content Creator',
+        alt: 'Bloomly.io - AI-Powered Instagram Content Creator',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Taylor Collection - AI-Powered Instagram Content Creator',
+    title: 'Bloomly.io - AI-Powered Instagram Content Creator',
     description: 'Create stunning Instagram content for your fashion boutique in minutes with AI-powered design tools.',
     images: ['/twitter-image.png'],
-    creator: '@taylorcollection',
+    creator: '@bloomly',
   },
   robots: {
     index: true,
@@ -119,10 +119,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <link rel="preconnect" href="https://graph.instagram.com" />
         
         {/* PWA configuration */}
-        <meta name="application-name" content="Taylor Collection" />
+        <meta name="application-name" content="Bloomly.io" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Taylor Collection" />
+        <meta name="apple-mobile-web-app-title" content="Bloomly.io" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/browserconfig.xml" />

@@ -1,0 +1,106 @@
+# Bloomly.io - Docker Compose for TrueNAS Deployment
+version: '3.8'
+
+services:
+  # Main Application
+  bloomly-io:
+    build: .
+    container_name: bloomly-io-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      # Supabase Configuration
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # OpenAI Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_ORGANIZATION_ID=${OPENAI_ORGANIZATION_ID}
+      # Instagram API Configuration
+      - INSTAGRAM_APP_ID=${INSTAGRAM_APP_ID}
+      - INSTAGRAM_APP_SECRET=${INSTAGRAM_APP_SECRET}
+      # Cloudinary Configuration
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      # Application Configuration
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - APP_URL=${APP_URL:-http://localhost:3000}
+    volumes:
+      # Persistent data storage
+      - app_data:/app/data
+      - app_logs:/app/logs
+      # TrueNAS dataset mounts (adjust paths as needed)
+      - /mnt/pool/bloomly-io/uploads:/app/uploads
+      - /mnt/pool/bloomly-io/backups:/app/backups
+    networks:
+      - bloomly-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bloomly-io.rule=Host(\`bloomly.local\`)"
+      - "traefik.http.services.bloomly-io.loadbalancer.server.port=3000"
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: bloomly-io-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - /mnt/pool/bloomly-io/redis:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-defaultpassword}
+    networks:
+      - bloomly-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx reverse proxy (optional, for SSL termination)
+  nginx:
+    image: nginx:alpine
+    container_name: bloomly-io-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - /mnt/pool/bloomly-io/nginx/logs:/var/log/nginx
+    depends_on:
+      - bloomly-io
+    networks:
+      - bloomly-network
+
+volumes:
+  app_data:
+    driver: local
+  app_logs:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  bloomly-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

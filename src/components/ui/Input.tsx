@@ -40,7 +40,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <div className="relative">
           {leftIcon && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <div className="text-gray-400 text-sm">
+              <div className="text-muted-foreground text-sm">
                 {leftIcon}
               </div>
             </div>
@@ -62,7 +62,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           
           {rightIcon && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <div className="text-gray-400 text-sm">
+              <div className="text-muted-foreground text-sm">
                 {rightIcon}
               </div>
             </div>
@@ -72,7 +72,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {(error || helperText) && (
           <p className={clsx(
             'mt-1 text-sm',
-            hasError ? 'text-red-600' : 'text-gray-500'
+            hasError ? 'text-red-600' : 'text-muted-foreground'
           )}>
             {error || helperText}
           </p>

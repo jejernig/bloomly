@@ -1,4 +1,4 @@
-# Taylor Collection Canvas Editor - Manual Testing Checklist
+# Bloomly.io Canvas Editor - Manual Testing Checklist
 
 ## Pre-Testing Setup
 

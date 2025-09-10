@@ -4,7 +4,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout'
 
 export const metadata: Metadata = {
   title: 'Sign Up',
-  description: 'Create your Taylor Collection account and start creating stunning Instagram content for your boutique.',
+  description: 'Create your Bloomly.io account and start creating stunning Instagram content for your boutique.',
 }
 
 export default function SignUpPage() {

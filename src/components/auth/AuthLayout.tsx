@@ -30,7 +30,7 @@ export function AuthLayout({
             <div className="mx-auto h-12 w-auto">
               <div className="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
                 <h1 className="text-3xl font-bold font-fashion">
-                  Taylor Collection
+                  Bloomly.io
                 </h1>
               </div>
             </div>
@@ -42,7 +42,7 @@ export function AuthLayout({
           <h2 className="text-3xl font-bold tracking-tight text-gray-900">
             {title}
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             {subtitle}
           </p>
         </div>
@@ -55,7 +55,7 @@ export function AuthLayout({
         
         {showAuthToggle && authToggleText && authToggleLink && authToggleLinkText && (
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {authToggleText}{' '}
               <Link 
                 href={authToggleLink}
@@ -72,7 +72,7 @@ export function AuthLayout({
       <div className="mt-8 text-center">
         <Link 
           href="/"
-          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

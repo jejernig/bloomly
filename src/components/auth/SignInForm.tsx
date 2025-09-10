@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -32,16 +33,23 @@ export function SignInForm() {
   })
 
   const onSubmit = async (data: SignInFormData) => {
+    console.log('🔐 SignInForm: onSubmit called with:', data.email)
     try {
+      console.log('🔐 SignInForm: Calling signIn...')
       const result = await signIn(data.email, data.password)
+      console.log('🔐 SignInForm: signIn result:', result)
       
       if (result.success) {
+        console.log('🔐 SignInForm: Success! Showing toast and navigating...')
         toast.success('Welcome back!')
         router.push('/dashboard')
+        console.log('🔐 SignInForm: router.push called')
       } else {
+        console.log('🔐 SignInForm: Sign in failed:', result.error)
         toast.error(result.error || 'Failed to sign in')
       }
     } catch (error) {
+      console.log('🔐 SignInForm: Exception caught:', error)
       toast.error('An unexpected error occurred')
       console.error('Sign in error:', error)
     }
@@ -100,7 +108,7 @@ export function SignInForm() {
           <div className="w-full border-t border-gray-300" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+          <span className="px-2 bg-white text-muted-foreground">Or continue with email</span>
         </div>
       </div>
 
@@ -111,6 +119,7 @@ export function SignInForm() {
           type="email"
           placeholder="Enter your email"
           leftIcon={<Mail className="h-4 w-4" />}
+          autoComplete="email"
           error={errors.email?.message}
           {...register('email')}
         />
@@ -129,6 +138,7 @@ export function SignInForm() {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           }
+          autoComplete="current-password"
           error={errors.password?.message}
           {...register('password')}
         />
@@ -139,6 +149,7 @@ export function SignInForm() {
               id="remember-me"
               name="remember-me"
               type="checkbox"
+              autoComplete="off"
               className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
             />
             <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
@@ -147,12 +158,12 @@ export function SignInForm() {
           </div>
 
           <div className="text-sm">
-            <a
-              href="#"
+            <Link
+              href="/auth/forgot-password"
               className="font-medium text-primary-600 hover:text-primary-500 transition-colors"
             >
               Forgot your password?
-            </a>
+            </Link>
           </div>
         </div>
 
