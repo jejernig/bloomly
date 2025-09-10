@@ -130,8 +130,8 @@ describe('Button Component', () => {
 
     it('applies disabled styling', () => {
       render(<Button disabled>Disabled Button</Button>)
-      expect(screen.getByRole('button')).toHaveClass('opacity-50')
-      expect(screen.getByRole('button')).toHaveClass('pointer-events-none')
+      expect(screen.getByRole('button')).toHaveClass('disabled:opacity-50')
+      expect(screen.getByRole('button')).toHaveClass('disabled:pointer-events-none')
     })
   })
 

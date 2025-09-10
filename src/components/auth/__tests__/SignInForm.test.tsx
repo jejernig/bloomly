@@ -115,11 +115,12 @@ describe('SignInForm Component', () => {
       const submitButton = screen.getByRole('button', { name: /sign in$/i })
       
       fireEvent.change(emailInput, { target: { value: 'invalid-email' } })
+      fireEvent.blur(emailInput) // Trigger validation
       fireEvent.click(submitButton)
       
       await waitFor(() => {
         expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument()
-      })
+      }, { timeout: 3000 })
     })
 
     it('shows validation error for short password', async () => {

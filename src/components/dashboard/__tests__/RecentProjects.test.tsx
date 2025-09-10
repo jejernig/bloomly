@@ -33,13 +33,13 @@ const mockProjects = [
     id: '1',
     title: 'Test Project 1',
     status: 'published',
-    updated_at: '2024-01-01T00:00:00Z'
+    updatedAt: '2024-01-01T00:00:00Z'
   },
   {
     id: '2',
     title: 'Test Project 2',
     status: 'draft',
-    updated_at: '2024-01-02T00:00:00Z'
+    updatedAt: '2024-01-02T00:00:00Z'
   }
 ]
 
@@ -99,12 +99,12 @@ describe('RecentProjects', () => {
       expect(screen.getByText('draft')).toBeInTheDocument()
     })
 
-    test('sorts projects by updated_at and respects limit', async () => {
+    test('sorts projects by updatedAt and respects limit', async () => {
       const manyProjects = [
-        { id: '1', title: 'Old Project', status: 'draft', updated_at: '2024-01-01T00:00:00Z' },
-        { id: '2', title: 'Recent Project', status: 'published', updated_at: '2024-01-03T00:00:00Z' },
-        { id: '3', title: 'Newest Project', status: 'draft', updated_at: '2024-01-04T00:00:00Z' },
-        { id: '4', title: 'Very Old Project', status: 'published', updated_at: '2023-12-01T00:00:00Z' }
+        { id: '1', title: 'Old Project', status: 'draft', updatedAt: '2024-01-01T00:00:00Z' },
+        { id: '2', title: 'Recent Project', status: 'published', updatedAt: '2024-01-03T00:00:00Z' },
+        { id: '3', title: 'Newest Project', status: 'draft', updatedAt: '2024-01-04T00:00:00Z' },
+        { id: '4', title: 'Very Old Project', status: 'published', updatedAt: '2023-12-01T00:00:00Z' }
       ]
 
       mockProjectsAPIWithRetry.list.mockResolvedValue({
@@ -133,7 +133,7 @@ describe('RecentProjects', () => {
         id: '1',
         title: 'Recent Project',
         status: 'published',
-        updated_at: oneHourAgo.toISOString()
+        updatedAt: oneHourAgo.toISOString()
       }
 
       mockProjectsAPIWithRetry.list.mockResolvedValue({
@@ -223,9 +223,9 @@ describe('RecentProjects', () => {
   describe('Status Colors', () => {
     test('applies correct status colors', async () => {
       const statusProjects = [
-        { id: '1', title: 'Published Project', status: 'published', updated_at: '2024-01-01T00:00:00Z' },
-        { id: '2', title: 'Scheduled Project', status: 'scheduled', updated_at: '2024-01-02T00:00:00Z' },
-        { id: '3', title: 'Draft Project', status: 'draft', updated_at: '2024-01-03T00:00:00Z' }
+        { id: '1', title: 'Published Project', status: 'published', updatedAt: '2024-01-01T00:00:00Z' },
+        { id: '2', title: 'Scheduled Project', status: 'scheduled', updatedAt: '2024-01-02T00:00:00Z' },
+        { id: '3', title: 'Draft Project', status: 'draft', updatedAt: '2024-01-03T00:00:00Z' }
       ]
 
       mockProjectsAPIWithRetry.list.mockResolvedValue({

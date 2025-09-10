@@ -5,6 +5,10 @@ import { ErrorBoundary, InlineErrorBoundary } from '@/components/error/ErrorBoun
 import { ProjectCardSkeleton, SkeletonLoader } from '@/components/ui/Skeleton'
 import { projectsAPIWithRetry, showErrorToast } from '@/lib/api'
 import { Project } from '@/types'
+
+interface ProjectWithStatus extends Project {
+  status?: 'published' | 'draft' | 'scheduled'
+}
 import { MoreHorizontal, Calendar, Edit3, AlertCircle, RefreshCcw } from 'lucide-react'
 
 interface RecentProjectsProps {
@@ -13,7 +17,7 @@ interface RecentProjectsProps {
 }
 
 export function RecentProjects({ className, limit = 3 }: RecentProjectsProps) {
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<ProjectWithStatus[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -27,7 +31,11 @@ export function RecentProjects({ className, limit = 3 }: RecentProjectsProps) {
       if (response.success && response.data) {
         // Sort by updatedAt and take the most recent ones
         const sortedProjects = response.data
-          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+          .sort((a, b) => {
+            const aDate = new Date(a.updatedAt || 0)
+            const bDate = new Date(b.updatedAt || 0)
+            return bDate.getTime() - aDate.getTime()
+          })
           .slice(0, limit)
         
         setProjects(sortedProjects)
@@ -47,8 +55,12 @@ export function RecentProjects({ className, limit = 3 }: RecentProjectsProps) {
     loadProjects()
   }, [limit])
 
-  const formatRelativeTime = (dateString: string) => {
+  const formatRelativeTime = (dateString: string | undefined) => {
+    if (!dateString) return 'Unknown time'
+    
     const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'Invalid date'
+    
     const now = new Date()
     const diffInMs = now.getTime() - date.getTime()
     const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
@@ -63,6 +75,19 @@ export function RecentProjects({ className, limit = 3 }: RecentProjectsProps) {
       return '1 day ago'
     } else {
       return `${diffInDays} days ago`
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'published':
+        return 'bg-green-100 text-green-700'
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-700'
+      case 'draft':
+        return 'bg-gray-100 text-gray-700'
+      default:
+        return 'bg-gray-100 text-gray-700'
     }
   }
 
@@ -139,9 +164,16 @@ export function RecentProjects({ className, limit = 3 }: RecentProjectsProps) {
                     <span className="text-xl">📸</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">
-                      {project.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-gray-900">
+                        {project.title}
+                      </h3>
+                      {project.status && (
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                          {project.status}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center text-xs text-gray-500 mt-1">
                       <Calendar className="h-3 w-3 mr-1" />
                       {formatRelativeTime(project.updatedAt)}

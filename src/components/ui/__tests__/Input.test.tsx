@@ -30,7 +30,7 @@ describe('Input Component', () => {
     const inputTypes = [
       { type: 'text', role: 'textbox' },
       { type: 'email', role: 'textbox' },
-      { type: 'password', role: 'textbox' },
+      { type: 'password', role: null },
       { type: 'tel', role: 'textbox' },
       { type: 'url', role: 'textbox' },
     ]
@@ -38,7 +38,8 @@ describe('Input Component', () => {
     inputTypes.forEach(({ type, role }) => {
       it(`renders ${type} input correctly`, () => {
         render(<Input type={type as any} placeholder="Test" />)
-        const input = screen.getByRole(role)
+        // Password inputs don't expose textbox role for security
+        const input = role ? screen.getByRole(role) : screen.getByPlaceholderText('Test')
         expect(input).toHaveAttribute('type', type)
       })
     })
@@ -319,7 +320,7 @@ describe('Input Component', () => {
       )
       
       // The container should have the custom class
-      const container = screen.getByRole('textbox').closest('div')
+      const container = screen.getByRole('textbox').parentElement?.parentElement
       expect(container).toHaveClass('custom-container')
     })
   })

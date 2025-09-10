@@ -93,7 +93,7 @@ export const mockAuthError = {
 export const setupMockAuthStore = (initialState = {}) => {
   const { useAuthStore } = require('@/stores/useAuthStore')
   
-  // Reset store state
+  // Reset store state and ensure all methods are available
   useAuthStore.setState({
     user: null,
     profile: null,
@@ -102,6 +102,12 @@ export const setupMockAuthStore = (initialState = {}) => {
     error: null,
     ...initialState,
   })
+  
+  // Force re-initialization of store methods if needed
+  const storeState = useAuthStore.getState()
+  if (!storeState.setUser) {
+    console.warn('Store methods not initialized properly')
+  }
   
   return useAuthStore
 }

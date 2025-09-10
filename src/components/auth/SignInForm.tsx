@@ -30,26 +30,20 @@ export function SignInForm() {
     formState: { errors, isSubmitting },
   } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
+    mode: 'onBlur', // Enable validation on blur and submit
   })
 
   const onSubmit = async (data: SignInFormData) => {
-    console.log('🔐 SignInForm: onSubmit called with:', data.email)
     try {
-      console.log('🔐 SignInForm: Calling signIn...')
       const result = await signIn(data.email, data.password)
-      console.log('🔐 SignInForm: signIn result:', result)
       
       if (result.success) {
-        console.log('🔐 SignInForm: Success! Showing toast and navigating...')
         toast.success('Welcome back!')
         router.push('/dashboard')
-        console.log('🔐 SignInForm: router.push called')
       } else {
-        console.log('🔐 SignInForm: Sign in failed:', result.error)
         toast.error(result.error || 'Failed to sign in')
       }
     } catch (error) {
-      console.log('🔐 SignInForm: Exception caught:', error)
       toast.error('An unexpected error occurred')
       console.error('Sign in error:', error)
     }

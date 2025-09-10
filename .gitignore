@@ -151,6 +151,8 @@ Thumbs.db
 
 # Playwright
 test-results/
+test-results.json
+test-results.xml
 playwright-report/
 playwright/.cache/
 .playwright-mcp/
