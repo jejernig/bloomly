@@ -2,6 +2,7 @@
   "name": "bloomly-io",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Bloomly.io - AI-Powered Instagram Content Creator SaaS Platform",
   "repository": {
     "type": "git",
@@ -11,6 +12,9 @@
   "author": "Bloomly.io",
   "scripts": {
     "dev": "next dev -p 3060",
+    "dev:frontend": "next dev -p 3060",
+    "dev:backend": "node scripts/start-backend.js",
+    "dev:fullstack": "concurrently --kill-others --names \"NEXT,API\" --prefix-colors \"blue,green\" \"npm:dev:frontend\" \"npm:dev:backend\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -29,6 +33,7 @@
     "test:report": "playwright show-report",
     "test:install": "playwright install",
     "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch --preserveWatchOutput",
     "generate-types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts"
   },
   "dependencies": {
@@ -45,6 +50,7 @@
     "@tanstack/react-query": "^5.51.23",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "express": "^4.21.2",
     "fabric": "^6.0.2",
     "lucide-react": "^0.427.0",
     "next": "^14.2.5",
@@ -62,6 +68,7 @@
     "@playwright/test": "^1.46.0",
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
+    "@types/express": "^4.17.23",
     "@types/fabric": "^5.3.7",
     "@types/node": "^22.1.0",
     "@types/react": "^18.3.3",
@@ -70,14 +77,17 @@
     "@typescript-eslint/parser": "^7.18.0",
     "autoprefixer": "^10.4.20",
     "axe-playwright": "^2.0.1",
+    "concurrently": "^9.2.1",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.5",
+    "get-port": "^7.1.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.1.2",
     "postcss": "^8.4.41",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.5",
     "tailwind-merge": "^2.4.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.5.4"
   },
   "engines": {

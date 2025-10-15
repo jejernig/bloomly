@@ -167,6 +167,74 @@ src/
 └── styles/               # Global styles and Tailwind config
 ```
 
+## Development Server
+
+Bloomly supports both standalone frontend development and fullstack development with the custom Express backend:
+
+```bash
+# Start both frontend (port 3060) and backend (auto-detected port 3401-3410)
+npm run dev:fullstack
+
+# Or start services individually:
+npm run dev:frontend  # Next.js dev server only (port 3060)
+npm run dev:backend   # Express API server only (auto-detected port)
+```
+
+### Environment Configuration
+
+Create `.env.local` from the template:
+
+```bash
+cp .env.local.template .env.local
+```
+
+**Backend Port Range Configuration:**
+```bash
+BACKEND_PORT_RANGE_START=3401  # Start of port range for backend
+BACKEND_PORT_RANGE_END=3410    # End of port range for backend
+FRONTEND_PORT=3060              # Frontend dev server port
+```
+
+The backend will automatically detect the first available port in the range 3401-3410. The selected port is displayed during startup.
+
+### Features
+
+- **Single Command Startup**: Start both frontend and backend with `npm run dev:fullstack`
+- **Automatic Port Detection**: Backend finds available port in range 3401-3410
+- **Hot Reload**: Frontend supports Next.js Fast Refresh
+- **Auto Restart**: Backend auto-restarts on TypeScript file changes (~100ms with tsx)
+- **Health Checks**: Startup script verifies backend readiness before continuing
+- **Graceful Shutdown**: Ctrl+C cleanly stops both services with no orphaned processes
+- **Colored Logs**: Console output color-coded by service (blue=frontend, green=backend)
+
+### Troubleshooting
+
+**Port Already in Use:**
+If all ports in range 3401-3410 are occupied:
+```bash
+# Find processes using ports
+lsof -i :3401-3410
+
+# Or adjust the port range in .env.local
+BACKEND_PORT_RANGE_START=3411
+BACKEND_PORT_RANGE_END=3420
+```
+
+**Backend Startup Failures:**
+If the backend fails to start:
+1. Verify Node.js version >= 20.0.0: `node --version`
+2. Ensure dependencies are installed: `npm install`
+3. Check `server/src/index.ts` exists
+4. Review backend logs in the console (green-prefixed output)
+
+**Module Type Errors:**
+If you see module type warnings, verify `package.json` includes:
+```json
+{
+  "type": "module"
+}
+```
+
 ### Key Scripts
 ```bash
 npm run dev          # Development server
