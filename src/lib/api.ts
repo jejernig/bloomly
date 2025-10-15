@@ -151,8 +151,6 @@ export function showErrorToast(error: any) {
 }
 
 export function showSuccessToast(message: string) {
-  // eslint-disable-next-line no-console
-  console.log('Success:', message)
   toast.success(message)
 }
 
