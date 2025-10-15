@@ -170,9 +170,9 @@ export default function TermsOfServicePage() {
                 For questions about these Terms of Service, please contact us:
               </p>
               <div className="bg-gray-50 rounded-lg p-6">
-                <p className="text-gray-700"><strong>Email:</strong> legal@taylorcollection.app</p>
-                <p className="text-gray-700"><strong>Support:</strong> support@taylorcollection.app</p>
-                <p className="text-gray-700"><strong>Website:</strong> https://taylorcollection.app</p>
+                <p className="text-gray-700"><strong>Email:</strong> legal@bloomly.io</p>
+                <p className="text-gray-700"><strong>Support:</strong> support@bloomly.io</p>
+                <p className="text-gray-700"><strong>Website:</strong> https://bloomly.io</p>
               </div>
             </section>
 

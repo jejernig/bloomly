@@ -54,8 +54,8 @@ export default function PrivacyPolicyPage() {
               <h3 className="text-xl font-medium text-gray-800 mb-3">1.1 Data Controller Identity</h3>
               <div className="bg-gray-50 rounded-lg p-6 mb-4">
                 <p className="text-gray-700"><strong>Company Name:</strong> Bloomly.io</p>
-                <p className="text-gray-700"><strong>Email:</strong> privacy@taylorcollection.com</p>
-                <p className="text-gray-700"><strong>Website:</strong> https://taylorcollection.app</p>
+                <p className="text-gray-700"><strong>Email:</strong> privacy@bloomly.io</p>
+                <p className="text-gray-700"><strong>Website:</strong> https://bloomly.io</p>
                 <p className="text-gray-700"><strong>Data Protection Officer:</strong> Available upon request</p>
               </div>
               
@@ -212,8 +212,8 @@ export default function PrivacyPolicyPage() {
                 <p className="text-gray-700 mb-3">Contact us to exercise your privacy rights:</p>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-gray-700"><strong>Email:</strong> privacy@taylorcollection.app</p>
-                    <p className="text-gray-700"><strong>Support:</strong> support@taylorcollection.app</p>
+                    <p className="text-gray-700"><strong>Email:</strong> privacy@bloomly.io</p>
+                    <p className="text-gray-700"><strong>Support:</strong> support@bloomly.io</p>
                   </div>
                   <div>
                     <p className="text-gray-700"><strong>Response Time:</strong> Within 30 days (GDPR) or 45 days (CCPA)</p>
@@ -305,9 +305,9 @@ export default function PrivacyPolicyPage() {
                 For questions about this Privacy Policy or to exercise your privacy rights, please contact us:
               </p>
               <div className="bg-gray-50 rounded-lg p-6">
-                <p className="text-gray-700"><strong>Email:</strong> privacy@taylorcollection.app</p>
-                <p className="text-gray-700"><strong>Support:</strong> support@taylorcollection.app</p>
-                <p className="text-gray-700"><strong>Website:</strong> https://taylorcollection.app</p>
+                <p className="text-gray-700"><strong>Email:</strong> privacy@bloomly.io</p>
+                <p className="text-gray-700"><strong>Support:</strong> support@bloomly.io</p>
+                <p className="text-gray-700"><strong>Website:</strong> https://bloomly.io</p>
               </div>
             </section>
 

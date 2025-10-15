@@ -98,9 +98,9 @@ test.describe('Privacy Policy Page', () => {
     await page.getByRole('heading', { name: '8. Contact Us', level: 2 }).scrollIntoViewIfNeeded()
     
     // Verify contact information is displayed
-    await expect(page.locator('text=privacy@taylorcollection.app')).toBeVisible()
-    await expect(page.locator('text=support@taylorcollection.app')).toBeVisible()
-    await expect(page.locator('text=https://taylorcollection.app')).toBeVisible()
+    await expect(page.locator('text=privacy@bloomly.io')).toBeVisible()
+    await expect(page.locator('text=support@bloomly.io')).toBeVisible()
+    await expect(page.locator('text=https://bloomly.io')).toBeVisible()
   })
 
   test('should display GDPR compliance information @critical', async ({ page }) => {
@@ -352,7 +352,7 @@ test.describe('Privacy Policy Page', () => {
     
     // Verify important legal language is present
     await expect(page.locator('text=Data Controller')).toBeVisible()
-    await expect(page.locator('text=privacy@taylorcollection')).toBeVisible()
+    await expect(page.locator('text=privacy@bloomly')).toBeVisible()
     await expect(page.locator('text=AI-powered')).toBeVisible()
     
     // Verify service descriptions are comprehensive

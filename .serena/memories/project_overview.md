@@ -1,4 +1,4 @@
-# Taylor Collection - Project Overview
+# Bloomly.io - Project Overview
 
 ## Purpose
 AI-powered Instagram content creator for fashion boutiques. Mobile-first web app that combines canvas-based design tools with AI content generation and direct Instagram publishing.

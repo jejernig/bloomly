@@ -6,7 +6,7 @@ test.describe('Navigation and Page Loads', () => {
       await page.goto('/')
       
       // Check page loads successfully
-      await expect(page).toHaveTitle(/taylor collection/i)
+      await expect(page).toHaveTitle(/bloomly/i)
       
       // Check main navigation elements
       await expect(page.getByRole('navigation')).toBeVisible()

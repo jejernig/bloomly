@@ -1,4 +1,4 @@
-# Suggested Commands for Taylor Collection
+# Suggested Commands for Bloomly.io
 
 ## Development Commands
 ```bash

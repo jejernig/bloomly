@@ -87,9 +87,9 @@ test.describe('Terms of Service Page', () => {
     await page.getByRole('heading', { name: 'Contact Us', level: 2 }).scrollIntoViewIfNeeded()
     
     // Verify contact information is displayed
-    await expect(page.locator('text=legal@taylorcollection.app')).toBeVisible()
-    await expect(page.locator('text=support@taylorcollection.app')).toBeVisible()
-    await expect(page.locator('text=https://taylorcollection.app')).toBeVisible()
+    await expect(page.locator('text=legal@bloomly.io')).toBeVisible()
+    await expect(page.locator('text=support@bloomly.io')).toBeVisible()
+    await expect(page.locator('text=https://bloomly.io')).toBeVisible()
   })
 
   test('should display legal notices and disclaimers @critical', async ({ page }) => {
